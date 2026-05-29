@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Learning Gap — An Interactive Visual Essay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0e0e0e;
+    --paper: #f5f0e8;
+    --paper2: #ede6d6;
+    --accent: #c4392d;
+    --accent2: #1a6b8a;
+    --accent3: #2d7a3a;
+    --gold: #c9901e;
+    --muted: #6b6055;
+    --border: rgba(14,14,14,0.12);
+    --serif: 'Playfair Display', Georgia, serif;
+    --sans: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-weight: 300; line-height: 1.75; overflow-x: hidden; }
+
+  /* ── HERO ── */
+  #hero { position: relative; height: 100vh; min-height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: var(--ink); }
+  #hero-canvas { position: absolute; inset: 0; opacity: 0.85; }
+  .hero-text { position: relative; z-index: 2; text-align: center; color: var(--paper); padding: 2rem; }
+  .hero-kicker { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(245,240,232,0.55); margin-bottom: 1.5rem; }
+  .hero-title { font-family: var(--serif); font-size: clamp(3rem, 8vw, 6.5rem); font-weight: 700; line-height: 1.05; margin-bottom: 1.25rem; letter-spacing: -0.02em; }
+  .hero-title em { font-style: italic; color: #e8a87c; }
+  .hero-sub { font-size: 1.05rem; font-weight: 300; color: rgba(245,240,232,0.7); max-width: 520px; margin: 0 auto 2.5rem; }
+  .scroll-cue { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,240,232,0.4); display: flex; flex-direction: column; align-items: center; gap: 8px; animation: float 2.5s ease-in-out infinite; }
+  .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(245,240,232,0.4), transparent); }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
+  .hero-byline { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 2.5rem; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; }
+  .byline-name { color: rgba(245,240,232,0.75); }
+  .byline-sep { color: rgba(245,240,232,0.3); }
+  .byline-org { color: #e8a87c; text-decoration: none; border-bottom: 1px solid rgba(232,168,124,0.35); transition: border-color 0.2s; }
+  .byline-org:hover { border-color: #e8a87c; }
+
+  /* ── CHAPTER NAV ── */
+  #chapter-nav { position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; }
+  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(14,14,14,0.2); cursor: pointer; transition: all 0.3s ease; position: relative; }
+  .nav-dot::before { content: attr(data-label); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .nav-dot:hover::before { opacity: 1; }
+  .nav-dot.active { background: var(--accent); transform: scale(1.6); }
+  .nav-dot.light { background: rgba(245,240,232,0.3); }
+  .nav-dot.light.active { background: #e8a87c; }
+
+  /* ── SECTIONS ── */
+  .section { max-width: 760px; margin: 0 auto; padding: 6rem 2rem; }
+  .section-wide { max-width: 100%; padding: 5rem 0; background: var(--paper2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .section-wide-inner { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
+  .section-dark { background: var(--ink); color: var(--paper); padding: 5rem 0; border: none; }
+  .section-dark .section-inner { max-width: 760px; margin: 0 auto; padding: 0 2rem; }
+  .section-dark p { color: rgba(245,240,232,0.78); }
+  .section-dark .pull-quote { color: var(--paper); border-color: rgba(245,240,232,0.25); }
+
+  .chapter-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
+  .chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--accent); opacity: 0.3; max-width: 60px; }
+  h2.section-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; line-height: 1.15; margin-bottom: 2rem; letter-spacing: -0.02em; }
+  h3.sub-heading { font-family: var(--serif); font-size: 1.35rem; font-weight: 400; font-style: italic; margin: 2.5rem 0 1rem; color: var(--muted); }
+  p { margin-bottom: 1.5rem; font-size: 1.0625rem; }
+  p:last-child { margin-bottom: 0; }
+
+  .pull-quote { font-family: var(--serif); font-size: 1.5rem; font-style: italic; line-height: 1.5; border-left: 3px solid var(--accent); padding: 1rem 0 1rem 1.5rem; margin: 2.5rem 0; color: var(--ink); }
+  .stat-inline { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+
+  /* ── VIGNETTE CARDS ── */
+  .vignette-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
+  .vignette { background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem; position: relative; }
+  .vignette::before { content: '"'; font-family: var(--serif); font-size: 4rem; color: var(--accent); opacity: 0.2; position: absolute; top: 0.25rem; left: 1rem; line-height: 1; }
+  .vignette-text { font-size: 0.9375rem; line-height: 1.65; margin-bottom: 1rem; padding-top: 0.5rem; }
+  .vignette-byline { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .vignette-tag { display: inline-block; font-family: var(--mono); font-size: 0.65rem; padding: 2px 8px; border-radius: 2px; margin-bottom: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tag-gap { background: #fde8e6; color: var(--accent); }
+  .tag-bridge { background: #e2f0e4; color: var(--accent3); }
+  .tag-access { background: #e0eff5; color: var(--accent2); }
+
+  /* ── DATA VISUALIZATIONS ── */
+  .viz-container { margin: 2.5rem 0; background: var(--paper); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .viz-header { padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; }
+  .viz-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  .viz-note { font-family: var(--mono); font-size: 0.65rem; color: rgba(107,96,85,0.6); }
+  .viz-body { padding: 1.5rem 1.25rem; }
+
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0.85rem; }
+  .bar-label { font-family: var(--mono); font-size: 0.72rem; width: 110px; flex-shrink: 0; color: var(--muted); letter-spacing: 0.02em; }
+  .bar-track { flex: 1; height: 10px; background: rgba(14,14,14,0.07); border-radius: 2px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .bar-value { font-family: var(--mono); font-size: 0.72rem; width: 36px; text-align: right; color: var(--ink); }
+
+  /* ── GAIN VIZ ── */
+  .gain-vis { display: flex; flex-direction: column; gap: 1rem; }
+  .gain-row { display: flex; align-items: center; gap: 12px; }
+  .gain-label { font-family: var(--mono); font-size: 0.7rem; width: 90px; flex-shrink: 0; color: var(--muted); }
+  .gain-track { flex: 1; height: 24px; background: rgba(14,14,14,0.06); border-radius: 2px; position: relative; overflow: hidden; }
+  .gain-before { height: 100%; background: rgba(196,57,45,0.25); border-radius: 2px; display: flex; align-items: center; padding-left: 8px; font-family: var(--mono); font-size: 0.65rem; color: var(--accent); position: absolute; left: 0; top: 0; transition: width 1s ease; }
+  .gain-after { height: 100%; background: rgba(45,122,58,0.3); border-radius: 2px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: var(--mono); font-size: 0.65rem; color: var(--accent3); position: absolute; left: 0; top: 0; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s; }
+
+  /* ── PARTICLE CANVAS ── */
+  #particle-canvas { width: 100%; height: 320px; display: block; cursor: crosshair; }
+  .canvas-caption { font-family: var(--mono); font-size: 0.68rem; text-align: center; padding: 0.75rem; color: var(--muted); border-top: 1px solid var(--border); letter-spacing: 0.06em; }
+
+  /* ── ORNAMENT ── */
+  .ornament { text-align: center; font-family: var(--serif); font-size: 1.2rem; color: var(--accent); opacity: 0.4; margin: 0.5rem 0; letter-spacing: 0.4em; }
+
+  /* ── NUMBERS / STATS ── */
+  .big-number { font-family: var(--serif); font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+  .stat-cluster { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin: 2.5rem 0; }
+  .stat-card { padding: 1.25rem; border: 1px solid var(--border); border-radius: 4px; }
+  .stat-card .big-number { font-size: 2.5rem; margin-bottom: 0.3rem; }
+  .stat-card p { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+
+  /* ── RESEARCH CHAPTER ── */
+  .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 2.5rem 0; }
+  .method-card { border: 1px solid var(--border); border-radius: 4px; padding: 1.25rem; background: var(--paper2); position: relative; overflow: hidden; }
+  .method-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
+  .method-card.ai-card::after { background: var(--accent2); }
+  .method-card.trad-card::after { background: var(--gold); }
+  .method-card.hybrid-card::after { background: var(--accent3); }
+  .method-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
+  .method-score { font-family: var(--serif); font-size: 2.25rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; }
+  .method-gain { font-family: var(--mono); font-size: 0.8rem; margin-bottom: 0.75rem; }
+  .method-desc { font-size: 0.875rem; line-height: 1.55; color: var(--muted); margin: 0; }
+
+  .race-track { margin: 2.5rem 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+  .race-header { display: flex; justify-content: space-between; align-items: baseline; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .race-body { padding: 1.5rem 1.25rem; }
+  .race-row { display: grid; grid-template-columns: 90px 1fr 60px; align-items: center; gap: 12px; margin-bottom: 1.1rem; }
+  .race-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--muted); }
+  .race-outer { height: 28px; background: rgba(14,14,14,0.06); border-radius: 2px; overflow: hidden; }
+  .race-bar { height: 100%; border-radius: 2px; display: flex; align-items: center; padding-left: 10px; font-family: var(--mono); font-size: 0.68rem; color: white; transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; overflow: hidden; }
+  .race-delta { font-family: var(--mono); font-size: 0.72rem; text-align: right; }
+
+  .two-col-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0; }
+  .compare-card { border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem; background: var(--paper2); }
+  .compare-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .compare-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--border); display: inline-block; }
+  .compare-card.adaptive .compare-label::before { background: var(--accent3); }
+  .compare-card.static .compare-label::before { background: var(--accent); }
+  .compare-big { font-family: var(--serif); font-size: 3rem; font-weight: 700; line-height: 1; margin-bottom: 0.2rem; }
+  .compare-sub { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  /* ── FOOTER ── */
+  footer { background: var(--ink); color: rgba(245,240,232,0.45); text-align: center; padding: 3rem 2rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; }
+  footer a { color: rgba(245,240,232,0.6); }
+
+  /* ── PROGRESS ── */
+  #reading-progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); z-index: 1000; transition: width 0.1s linear; width: 0%; }
+
+  @media (max-width: 600px) {
+    .vignette-grid { grid-template-columns: 1fr; }
+    .stat-cluster { grid-template-columns: 1fr 1fr; }
+    .bar-label { width: 80px; font-size: 0.65rem; }
+    #particle-canvas { height: 260px !important; touch-action: none; }
+    .hero-title { font-size: clamp(2.4rem, 12vw, 4rem); }
+    .section { padding: 4rem 1.25rem; }
+    .section-wide-inner { padding: 0 1.25rem; }
+    .pull-quote { font-size: 1.2rem; }
+    .gain-label { width: 60px; font-size: 0.65rem; }
+    .viz-header { flex-direction: column; gap: 4px; }
+    .method-grid { grid-template-columns: 1fr; }
+    .two-col-stat { grid-template-columns: 1fr; }
+    #chapter-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="reading-progress"></div>
+
+<nav id="chapter-nav" aria-label="Chapter navigation">
+  <div class="nav-dot light active" data-section="hero" data-label="Intro"></div>
+  <div class="nav-dot" data-section="ch1" data-label="Two Students"></div>
+  <div class="nav-dot" data-section="vignettes" data-label="Voices"></div>
+  <div class="nav-dot" data-section="ch2" data-label="The Platform"></div>
+  <div class="nav-dot" data-section="ch3" data-label="The Workshops"></div>
+  <div class="nav-dot" data-section="ch4" data-label="20% → 80%"></div>
+  <div class="nav-dot" data-section="ch5" data-label="The Divide"></div>
+  <div class="nav-dot" data-section="ch6" data-label="Research I"></div>
+  <div class="nav-dot" data-section="ch7" data-label="Research II"></div>
+  <div class="nav-dot light" data-section="closing" data-label="Closing"></div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section id="hero" data-nav="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-text">
+    <p class="hero-kicker">An interactive visual essay</p>
+    <h1 class="hero-title">The Learning<br><em>Gap</em></h1>
+    <p class="hero-sub">How the AI revolution is widening the gulf between those who can navigate it and those who cannot — and what one classroom experiment showed us about closing it.</p>
+    <div class="hero-byline">
+      <span class="byline-name">Ayush Kumar</span>
+      <span class="byline-sep">·</span>
+      <a href="https://ak3036811-gif.github.io/algobridge-learn/" class="byline-org">Founder, AlgoBridge</a>
+    </div>
+    <div class="scroll-cue">
+      <span>Scroll to begin</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CHAPTER 1 ═══════════════════ -->
+<div class="section reveal" id="ch1" data-nav="ch1">
+  <p class="chapter-label">Chapter I</p>
+  <h2 class="section-title">Two students.<br>One curriculum.<br>A world apart.</h2>
+
+  <p>Imagine two students sitting down to learn the same thing on the same day. Both are curious. Both are motivated. The difference isn't talent or effort — it's what happens the moment they get stuck.</p>
+
+  <p>The first student types a question into an AI assistant. It returns a wall of jargon calibrated for someone who already understands the prerequisites. She's lost within two paragraphs. She closes the tab.</p>
+
+  <p>The second student rephrases the same question three times, drawing on vocabulary from years of prep courses and after-school tutoring. The AI meets him where he is. He keeps going.</p>
+
+  <div class="pull-quote reveal">
+    "The AI didn't create this inequality. It inherited it — and then it amplified it."
+  </div>
+
+  <p>What we are witnessing is not a single gap but a compounding one. The gap in prior knowledge begets a gap in the ability to use new tools, which begets a gap in outcomes, which begets a gap in opportunity. Round and round.</p>
+
+  <p>I understood this pattern before I understood AI. During a data science apprenticeship with <a href="https://ak3036811-gif.github.io/Main-Website/" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.25)">DOT Glasses</a> — a social-impact company providing affordable prescription eyewear to underserved communities — I researched what happens when people can't access corrective lenses. A student who can't see the board falls behind. Not from lack of intelligence, but lack of access. A worker with blurred vision risks losing their livelihood. The smallest barrier, removed at the right moment, can change an entire trajectory. Our team placed 2nd globally in the pitching finale with an access-focused solution. The insight stayed with me. AI literacy is the same kind of barrier — invisible, structural, and fixable.</p>
+</div>
+
+<!-- ═══════════════════ VIGNETTES ═══════════════════ -->
+<div class="section-wide reveal" id="vignettes" data-nav="vignettes">
+  <div class="section-wide-inner">
+    <p class="chapter-label">From the classroom</p>
+    <h2 class="section-title" style="max-width:600px">The students behind the data</h2>
+    <p style="max-width:620px;margin-bottom:2rem;font-size:1.0625rem;color:var(--muted)">These are composite portraits drawn from real classroom experiences across AlgoBridge workshops. Names are illustrative. The barriers are unchanged.</p>
+
+    <div class="vignette-grid">
+      <div class="vignette">
+        <span class="vignette-tag tag-gap">Access</span>
+        <p class="vignette-text">"I tried using the AI chatbot my teacher recommended. But I only have limited mobile data. I couldn't keep the tab open long enough to finish a lesson."</p>
+        <div class="vignette-byline">Student, 17 — Workshop cohort</div>
+      </div>
+
+      <div class="vignette">
+        <span class="vignette-tag tag-bridge">Progress</span>
+        <p class="vignette-text">"Before I couldn't explain what an algorithm was. After one session, I was connecting it to how Google Search works, Netflix recommendations — things I use every day."</p>
+        <div class="vignette-byline">Student, 15 — Workshop cohort</div>
+      </div>
+
+      <div class="vignette">
+        <span class="vignette-tag tag-gap">Language</span>
+        <p class="vignette-text">"All the good tutorials assume you already know the basics. When I'm confused and ask for help, the explanation uses words I don't know either. I need to start earlier."</p>
+        <div class="vignette-byline">Student, 16 — Workshop cohort</div>
+      </div>
+
+      <div class="vignette">
+        <span class="vignette-tag tag-access">Infrastructure</span>
+        <p class="vignette-text">"There's no one at school who can answer my questions about coding. I find a tutorial, get stuck, and have nowhere to turn. I just stop."</p>
+        <div class="vignette-byline">Student, 14 — Workshop cohort</div>
+      </div>
+
+      <div class="vignette">
+        <span class="vignette-tag tag-bridge">Breakthrough</span>
+        <p class="vignette-text">"I went from thinking I was 'not a math person' to understanding how decision trees work — in one workshop. The difference was someone who explained it from where I actually was."</p>
+        <div class="vignette-byline">Student, 13 — Workshop cohort</div>
+      </div>
+
+      <div class="vignette">
+        <span class="vignette-tag tag-gap">Confidence</span>
+        <p class="vignette-text">"The hardest part is not knowing if my question is stupid. I need to feel safe to say 'I don't know what an algorithm is' without being judged."</p>
+        <div class="vignette-byline">Student, 18 — Workshop cohort</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER 2 — WORKSHOPS ═══════════════════ -->
+<div class="section-dark reveal" id="ch2" data-nav="ch2">
+  <div class="section-inner">
+    <p class="chapter-label" style="color:#e8a87c">Chapter II</p>
+    <h2 class="section-title" style="color:var(--paper)">The workshops</h2>
+
+    <p>Starting in Grade 11, I designed and ran a free AI literacy programme for students aged 11–18 across 5 NGOs — zero prior coding knowledge required. No jargon, no textbooks. Real-world analogies, interactive decisions, and the belief that understanding AI should not be a privilege.</p>
+
+    <div class="pull-quote" style="border-color:rgba(232,168,124,0.5);color:rgba(245,240,232,0.9)">
+      "The most common question after every session was: 'Where do I keep learning?' — so I built the platform to answer it."
+    </div>
+
+    <p>The workshops were not just about content. They were about demonstrating, to students who had been told algorithms were too complex for them, that understanding AI is not a matter of intelligence. It is a matter of being met where you are.</p>
+
+    <div class="stat-cluster reveal">
+      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
+        <div class="big-number" style="color:#e8a87c">100+</div>
+        <p style="color:rgba(245,240,232,0.5)">Students reached through free workshops</p>
+      </div>
+      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
+        <div class="big-number" style="color:#e8a87c">5</div>
+        <p style="color:rgba(245,240,232,0.5)">NGO partners across the programme</p>
+      </div>
+      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
+        <div class="big-number" style="color:#e8a87c">11–18</div>
+        <p style="color:rgba(245,240,232,0.5)">Age range · zero prior coding needed</p>
+      </div>
+      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
+        <div class="big-number" style="color:#e8a87c">40k+</div>
+        <p style="color:rgba(245,240,232,0.5)">Blog readers across 10+ countries</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER 3 — PLATFORM ═══════════════════ -->
+<div class="section reveal" id="ch3" data-nav="ch3">
+  <p class="chapter-label">Chapter III</p>
+  <h2 class="section-title">What the research<br>says we should build differently.</h2>
+
+  <p>The most common question after every workshop was: <em>where do I keep learning?</em> So I built a platform to answer it — and every feature is a direct response to something the research identified about how AI-assisted learning currently fails.</p>
+
+  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
+    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">01</div>
+    <div>
+      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">Productive Struggle Timer</div>
+      <p style="margin:0;font-size:1rem;color:var(--muted)">Bjork (1994) shows that introducing difficulties during learning leads to dramatically stronger long-term memory. Hints on the platform unlock only after a minimum independent attempt window. The discomfort is the mechanism — not a bug.</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
+    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">02</div>
+    <div>
+      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">AI Hint System — Socratic, not prescriptive</div>
+      <p style="margin:0;font-size:1rem;color:var(--muted)">VanLehn (2011) found that AI tutors that diagnose misconceptions and provide targeted hints outperform both no-feedback and direct-answer systems. The hint hierarchy asks "what direction should you be thinking?" — never the solution itself.</p>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
+    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">03</div>
+    <div>
+      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">Mistake Log</div>
+      <p style="margin:0;font-size:1rem;color:var(--muted)">Dunlosky et al. (2013): students who regularly review their errors consistently outperform those who only practise new material. Every error is logged with root cause and correction path — turning failure from discouragement into data.</p>
+    </div>
+  </div>
+
+  <div class="pull-quote reveal">
+    "Access is the floor, not the ceiling. We have spent a decade building the floor. The ceiling — genuine comprehension, genuine capability — requires something harder and more human."
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER 4 — GAIN VIZ ═══════════════════ -->
+<div class="section reveal" id="ch4" data-nav="ch4">
+  <p class="chapter-label">Chapter IV</p>
+  <h2 class="section-title">~20% → ~80%.<br>What that actually means.</h2>
+
+  <p>At the start of each workshop, roughly 1 in 5 students could explain what an algorithm is or describe how it affects their daily life. By the end of a single session, roughly 4 in 5 could — using a real-world example they chose themselves, unprompted.</p>
+
+  <p>Pre/post comprehension checks were conducted at the start and end of every session. The shift was not in memorised definitions. Students spontaneously connected Google Search, Netflix, and WhatsApp recommendations to what they had just learned.</p>
+
+  <div class="viz-container reveal">
+    <div class="viz-header">
+      <span class="viz-title">Pre / post comprehension — AlgoBridge workshops</span>
+      <span class="viz-note">Based on session-level checks · 100+ students</span>
+    </div>
+    <div class="viz-body">
+      <div style="display:flex;gap:16px;margin-bottom:1rem;font-family:var(--mono);font-size:0.68rem;color:var(--muted)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(196,57,45,0.35);display:inline-block"></span>Before</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(45,122,58,0.4);display:inline-block"></span>After</span>
+      </div>
+      <div class="gain-vis" id="gain-chart"></div>
+      <p style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-top:1rem;margin-bottom:0">Each row represents one workshop session. Before: % of students who could explain algorithmic logic. After: % who could apply it to a real-world example unprompted.</p>
+    </div>
+  </div>
+
+  <p>These were not students who lacked ability. They were students who had never been introduced to the concept. One session changed that — not because the content was simpler, but because it started from where they actually were.</p>
+</div>
+
+<!-- ═══════════════════ CHAPTER 5 — INTERACTIVE ═══════════════════ -->
+<div class="section-wide reveal" id="ch5" data-nav="ch5">
+  <div class="section-wide-inner">
+    <p class="chapter-label">Chapter V</p>
+    <h2 class="section-title">The divide, made visible</h2>
+    <p style="max-width:640px;margin-bottom:1.5rem;font-size:1.0625rem">Below is a generative model of the gap. Each particle is a learner. Blue particles have access to adaptive scaffolding. Red particles do not. Watch what happens over time — and what changes when you move your cursor into the field.</p>
+  </div>
+
+  <div style="background:var(--ink);border-top:1px solid rgba(14,14,14,0.3);border-bottom:1px solid rgba(14,14,14,0.3)">
+    <canvas id="particle-canvas"></canvas>
+    <div class="canvas-caption" style="background:var(--ink);color:rgba(245,240,232,0.4);border-top:1px solid rgba(245,240,232,0.08)">Move your cursor (or drag on mobile) over the canvas to introduce a bridge. Watch how proximity to support changes trajectories.</div>
+  </div>
+
+  <div class="section-wide-inner" style="padding-top:2.5rem">
+    <p style="max-width:640px;font-size:1.0625rem">The simulation is not precise data. It is a feeling — the feeling of watching potential scatter in the absence of support, and consolidate when support arrives. That feeling is what drives this work.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ CHAPTER 6 — RESEARCH I ═══════════════════ -->
+<div class="section reveal" id="ch6" data-nav="ch6">
+  <p class="chapter-label">Chapter VI · Research</p>
+  <h2 class="section-title">AI vs. Traditional vs. Hybrid Learning</h2>
+
+  <p>The platform's pedagogical design is grounded in a question I tested empirically: does AI-assisted learning actually produce better outcomes, or does it create the illusion of learning while undermining deeper cognitive development?</p>
+
+  <p>39 top-5% JEE students. Three controlled groups. Two months. The same practice test before and after. The same syllabus, same study time, different method.</p>
+
+  <div class="method-grid reveal">
+    <div class="method-card ai-card">
+      <div class="method-label">AI-Only Group · n=13</div>
+      <div class="method-score" style="color:var(--accent2)">210</div>
+      <div class="method-gain" style="color:var(--accent2)">+10 pts · from baseline 200</div>
+      <p class="method-desc">Fastest concept acquisition. Highest initial engagement. But a ceiling emerged — passive reading without active recall compressed the improvement rate.</p>
+    </div>
+    <div class="method-card trad-card">
+      <div class="method-label">Traditional-Only Group · n=13</div>
+      <div class="method-score" style="color:var(--gold)">208</div>
+      <div class="method-gain" style="color:var(--gold)">+11 pts · from baseline 197</div>
+      <p class="method-desc">Marginally stronger improvement rate. Writing and active recall build more durable memory. Slower, but the cognitive encoding runs deeper.</p>
+    </div>
+    <div class="method-card hybrid-card">
+      <div class="method-label">Hybrid Group · n=13</div>
+      <div class="method-score" style="color:var(--accent3)">218</div>
+      <div class="method-gain" style="color:var(--accent3)">+23 pts · from baseline 195</div>
+      <p class="method-desc">Started lowest. Finished highest — by 8 points. In JEE Mains, 8 points is the difference between colleges and cutoffs. The two approaches didn't add — they compounded.</p>
+    </div>
+  </div>
+
+  <div class="race-track reveal">
+    <div class="race-header">
+      <span>Final score after 2 months — out of 300</span>
+      <span>JEE Mains practice test</span>
+    </div>
+    <div class="race-body">
+      <div class="race-row">
+        <div class="race-label">AI-Only</div>
+        <div class="race-outer"><div class="race-bar" id="race-ai" style="width:0%;background:var(--accent2)">210</div></div>
+        <div class="race-delta" style="color:var(--accent2)">+10 pts</div>
+      </div>
+      <div class="race-row">
+        <div class="race-label">Traditional</div>
+        <div class="race-outer"><div class="race-bar" id="race-trad" style="width:0%;background:var(--gold)">208</div></div>
+        <div class="race-delta" style="color:var(--gold)">+11 pts</div>
+      </div>
+      <div class="race-row">
+        <div class="race-label">Hybrid</div>
+        <div class="race-outer"><div class="race-bar" id="race-hybrid" style="width:0%;background:var(--accent3)">218</div></div>
+        <div class="race-delta" style="color:var(--accent3)">+23 pts</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pull-quote reveal">
+    "AI improves performance level. Traditional methods improve the rate of improvement. The hybrid approach does both simultaneously — and the data shows it."
+  </div>
+
+  <p>This is not an argument against AI in education. It is an argument for using it correctly — with the cognitive effort preserved, not bypassed. Every design decision in AlgoBridge Learn follows directly from this finding. <a href="https://osf.io/8f4c3" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.3)" target="_blank">Read the full study on OSF →</a></p>
+</div>
+
+<!-- ═══════════════════ CHAPTER 7 — RESEARCH II ═══════════════════ -->
+<div class="section-wide reveal" id="ch7" data-nav="ch7">
+  <div class="section-wide-inner">
+    <p class="chapter-label">Chapter VII · Research</p>
+    <h2 class="section-title">The same principle — tested in a game engine.</h2>
+
+    <p style="max-width:660px;font-size:1.0625rem">Meeting the learner where they are is not just a teaching philosophy. It is a testable mechanism. I ran a second study inside a 2D platformer I built: one version with static difficulty, one with a lightweight AI-adaptive system that adjusts challenge to the player's performance in real time.</p>
+
+    <p style="max-width:660px;font-size:1.0625rem">10 participants. Randomised order to control for learning effects. The question: does matching challenge to skill keep people engaged longer and failing less?</p>
+
+    <div class="two-col-stat reveal">
+      <div class="compare-card static">
+        <div class="compare-label">Static Difficulty</div>
+        <div class="compare-big" style="color:var(--accent)">~12</div>
+        <div class="compare-sub">avg. minutes per session</div>
+        <div style="margin-top:1.5rem">
+          <div class="compare-big" style="color:var(--accent);font-size:2.25rem">~7</div>
+          <div class="compare-sub">avg. retries per level</div>
+        </div>
+      </div>
+      <div class="compare-card adaptive">
+        <div class="compare-label">AI-Adaptive Difficulty</div>
+        <div class="compare-big" style="color:var(--accent3)">~21</div>
+        <div class="compare-sub">avg. minutes per session · <strong style="color:var(--accent3)">+75%</strong></div>
+        <div style="margin-top:1.5rem">
+          <div class="compare-big" style="color:var(--accent3);font-size:2.25rem">~3.5</div>
+          <div class="compare-sub">avg. retries per level · <strong style="color:var(--accent3)">−50%</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <p style="max-width:660px;font-size:1.0625rem">75% longer sessions. 50% fewer retries. The mechanism is flow: when challenge matches skill, people don't quit. The same logic applies in a platformer as in a classroom. If the gap between where you are and what's being asked of you is too wide, disengagement isn't a failure of willpower — it's a rational response to a broken system.</p>
+
+    <div class="pull-quote reveal">
+      "The adaptive system didn't make the game easier. It made it possible to keep going — which is exactly what a learning platform must do."
+    </div>
+
+    <p style="max-width:660px;font-size:1.0625rem">The adaptive difficulty system in AlgoBridge Learn tracks accuracy, retry count, and hint usage to route students toward problems at the right challenge level. Same mechanism. Different stakes. <a href="https://osf.io/54dws" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.3)" target="_blank">Read the full study on OSF →</a></p>
+  </div>
+</div>
+
+<!-- ═══════════════════ CLOSING ═══════════════════ -->
+<div class="section-dark reveal" id="closing" data-nav="closing">
+  <div class="section-inner">
+    <p class="chapter-label" style="color:#e8a87c">Closing</p>
+    <h2 class="section-title" style="color:var(--paper)">The gap is not inevitable.</h2>
+
+    <p>There is a version of the AI education story where the technology does what all previous education technology promised: it democratizes access, it personalizes at scale, it turns every student's phone into a patient tutor.</p>
+
+    <p>That version is possible. We have seen it, in small controlled bursts — in workshops where a student who had never heard the word "algorithm" was connecting it, unprompted, to Google Search twenty minutes later. We know the ingredients. The challenge is not technical. It is a choice about who we design for when we design learning systems.</p>
+
+    <p>I didn't start building because I had a plan. I started because every time I looked at the gap — in those workshops, in the DOT Glasses research, in the 40,000 people reading an AI education blog they found on their own — I couldn't justify not trying. The platform is free because it has to be. The research is published because it should be checked. The workshops happened because the question after every session was the same: where do I keep learning? This essay is one more answer to that question.</p>
+
+    <div class="pull-quote" style="border-color:rgba(232,168,124,0.5);color:rgba(245,240,232,0.9)">
+      "One workshop on algorithms could spark a future engineer. I've seen it. That's why the platform is free, and always will be."
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:2.5rem">
+      <a href="https://ak3036811-gif.github.io/algobridge-learn/" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--paper);border:1px solid rgba(245,240,232,0.25);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,232,0.7)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.25)'">Try the platform →</a>
+      <a href="https://ak3036811-gif.github.io/Main-Website/" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.55);border:1px solid rgba(245,240,232,0.12);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,232,0.4)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.12)'">Full portfolio →</a>
+      <a href="https://itsreadingtimee.blogspot.com" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.55);border:1px solid rgba(245,240,232,0.12);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,138,0.4)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.12)'">Read the blog →</a>
+    </div>
+
+    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(245,240,232,0.12)">
+      <p style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.5rem">Data sources</p>
+      <p style="font-family:var(--mono);font-size:0.72rem;color:rgba(245,240,232,0.35);line-height:1.8;margin:0">AlgoBridge Workshop Data 2024–2025 (pre/post comprehension checks, 100+ students, 5 NGOs) · AlgoBridge Learn platform analytics · AI vs. Traditional Learning: Comparative Study, 2025 — OSF: osf.io/8f4c3 · AI-Adaptive Difficulty in Games, 2025 — OSF: osf.io/54dws · Blog analytics: itsreadingtimee.blogspot.com · All student vignettes are composite portraits. No personally identifying information retained.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p style="margin-bottom:0.5rem;color:rgba(245,240,232,0.65)">The Learning Gap — An Interactive Visual Essay</p>
+  <p style="margin-bottom:1rem">By <span style="color:rgba(245,240,232,0.65)">Ayush Kumar</span> · Founder, <a href="https://ak3036811-gif.github.io/algobridge-learn/" style="color:#e8a87c;text-decoration:none">AlgoBridge</a></p>
+  <p style="font-size:0.65rem;opacity:0.55">Built with p5.js, vanilla JS, and an insistence that data should be felt, not just read.</p>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// CHAPTER NAV
+// ═══════════════════════════════════════════════
+const navDots = document.querySelectorAll('.nav-dot');
+const navSections = ['hero','ch1','vignettes','ch2','ch3','ch4','ch5','ch6','ch7','closing'];
+const darkNavSections = ['hero','ch3','closing'];
+
+function updateNav() {
+  let current = 'hero';
+  navSections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.5) current = id;
+  });
+  navDots.forEach(dot => {
+    const sec = dot.dataset.section;
+    dot.classList.remove('active','light');
+    if (darkNavSections.includes(current)) dot.classList.add('light');
+    if (sec === current) dot.classList.add('active');
+  });
+}
+window.addEventListener('scroll', updateNav, { passive: true });
+navDots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const el = document.getElementById(dot.dataset.section);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ═══════════════════════════════════════════════
+// READING PROGRESS BAR
+// ═══════════════════════════════════════════════
+function updateProgress() {
+  const h = document.documentElement;
+  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+  document.getElementById('reading-progress').style.width = pct + '%';
+}
+window.addEventListener('scroll', updateProgress, { passive: true });
+
+// ═══════════════════════════════════════════════
+// HERO CANVAS
+// ═══════════════════════════════════════════════
+const heroSketch = function(p) {
+  let dots = [];
+  const N = 180;
+  p.setup = function() {
+    const c = document.getElementById('hero-canvas');
+    const r = c.parentElement.getBoundingClientRect();
+    p.createCanvas(r.width, r.height, p.P2D).parent(c.parentElement).id('hero-canvas');
+    for (let i = 0; i < N; i++) {
+      dots.push({ x: p.random(p.width), y: p.random(p.height), vx: p.random(-0.3, 0.3), vy: p.random(-0.3, 0.3), r: p.random(1.5, 4), bright: p.random(0.3, 0.85), side: i < N * 0.55 ? 'left' : 'right' });
+    }
+    document.getElementById('hero-canvas').style.position = 'absolute';
+  };
+  p.draw = function() {
+    p.clear(); p.background(14, 14, 14, 0);
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const d = p.dist(dots[i].x, dots[i].y, dots[j].x, dots[j].y);
+        if (d < 90) {
+          const alpha = p.map(d, 0, 90, 30, 0);
+          const sameGroup = dots[i].side === dots[j].side;
+          if (sameGroup) { p.stroke(dots[i].side === 'left' ? 26 : 196, dots[i].side === 'left' ? 107 : 57, dots[i].side === 'left' ? 138 : 45, alpha); }
+          else { p.stroke(150, 100, 60, alpha * 0.3); }
+          p.strokeWeight(0.5); p.line(dots[i].x, dots[i].y, dots[j].x, dots[j].y);
+        }
+      }
+    }
+    p.noStroke();
+    dots.forEach(d => {
+      const col = d.side === 'left' ? p.color(26, 107, 138, d.bright * 255) : p.color(196, 57, 45, d.bright * 255);
+      p.fill(col); p.circle(d.x, d.y, d.r * 2);
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0 || d.x > p.width) d.vx *= -1;
+      if (d.y < 0 || d.y > p.height) d.vy *= -1;
+    });
+  };
+  p.windowResized = function() { const r = document.getElementById('hero').getBoundingClientRect(); p.resizeCanvas(r.width, r.height); };
+};
+new p5(heroSketch);
+
+// ═══════════════════════════════════════════════
+// SCROLL REVEAL
+// ═══════════════════════════════════════════════
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      if (e.target.id === 'gain-chart') animateGain();
+    }
+  });
+}, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// ═══════════════════════════════════════════════
+// GAIN CHART — workshop pre/post data
+// ═══════════════════════════════════════════════
+const gainData = [
+  { label: 'Session 1', before: 18, after: 79 },
+  { label: 'Session 2', before: 22, after: 81 },
+  { label: 'Session 3', before: 17, after: 78 },
+  { label: 'Session 4', before: 21, after: 83 },
+  { label: 'Session 5', before: 20, after: 80 },
+];
+const gainChart = document.getElementById('gain-chart');
+gainData.forEach(d => {
+  const row = document.createElement('div');
+  row.className = 'gain-row';
+  row.innerHTML = `<div class="gain-label">${d.label}</div><div class="gain-track"><div class="gain-before" style="width:${d.before}%">${d.before}%</div><div class="gain-after" style="width:0%;z-index:2">${d.after}%</div></div>`;
+  gainChart.appendChild(row);
+});
+let gainAnimated = false;
+function animateGain() {
+  if (gainAnimated) return; gainAnimated = true;
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.gain-after').forEach((el, i) => {
+      const val = gainData[i].after;
+      setTimeout(() => { el.style.width = val + '%'; }, i * 60 + 300);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RACE BAR ANIMATION
+// ═══════════════════════════════════════════════
+let raceAnimated = false;
+const raceObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !raceAnimated) {
+      raceAnimated = true;
+      setTimeout(() => { document.getElementById('race-ai').style.width = '70%'; }, 100);
+      setTimeout(() => { document.getElementById('race-trad').style.width = '69.3%'; }, 300);
+      setTimeout(() => { document.getElementById('race-hybrid').style.width = '72.7%'; }, 500);
+    }
+  });
+}, { threshold: 0.3 });
+const raceEl = document.getElementById('race-ai');
+if (raceEl) { const rt = raceEl.closest('.race-track'); if (rt) raceObs.observe(rt); }
+
+// ═══════════════════════════════════════════════
+// PARTICLE CANVAS
+// ═══════════════════════════════════════════════
+const particleSketch = function(p) {
+  let particles = []; const NUM = 200; let mx = -500, my = -500;
+  p.setup = function() {
+    const container = document.getElementById('particle-canvas').parentElement;
+    p.createCanvas(container.clientWidth, 320, p.P2D).parent(container).id('particle-canvas');
+    for (let i = 0; i < NUM; i++) {
+      const hasAccess = i < NUM * 0.45;
+      particles.push({ x: p.random(p.width), y: p.random(p.height), vx: (hasAccess ? 1 : -1) * p.random(0.2, 0.8), vy: p.random(-0.4, 0.4), acc: hasAccess, energy: hasAccess ? p.random(0.6, 1.0) : p.random(0.1, 0.5), trail: [] });
+    }
+    document.getElementById('particle-canvas').style.display = 'block';
+  };
+  p.draw = function() {
+    p.background(14, 14, 14, 30);
+    const bridgeDist = 120;
+    particles.forEach(pt => {
+      const d = p.dist(pt.x, pt.y, mx, my);
+      if (d < bridgeDist) {
+        const influence = p.map(d, 0, bridgeDist, 1, 0);
+        pt.energy = Math.min(1, pt.energy + influence * 0.05);
+        pt.acc = pt.energy > 0.55;
+        const angle = p.atan2(pt.y - my, pt.x - mx);
+        pt.vx += Math.cos(angle) * 0.08 * influence;
+        pt.vy += Math.sin(angle) * 0.08 * influence;
+      } else { if (!pt.acc) pt.energy = Math.max(0.1, pt.energy - 0.003); }
+      pt.vx += (pt.acc ? 0.01 : -0.005) + p.random(-0.02, 0.02);
+      pt.vy += p.random(-0.02, 0.02);
+      pt.vx = p.constrain(pt.vx, -2, 2); pt.vy = p.constrain(pt.vy, -1.5, 1.5);
+      pt.x += pt.vx; pt.y += pt.vy;
+      if (pt.x < 0) pt.x = p.width; if (pt.x > p.width) pt.x = 0;
+      if (pt.y < 0) pt.y = p.height; if (pt.y > p.height) pt.y = 0;
+      const alpha = pt.energy * 200;
+      if (pt.acc) { p.fill(26, 107, 138, alpha); } else { p.fill(196, 57, 45, alpha); }
+      p.noStroke(); p.circle(pt.x, pt.y, 3 + pt.energy * 4);
+    });
+    if (mx > 0 && mx < p.width && my > 0 && my < p.height) {
+      p.noFill(); p.stroke(200, 180, 140, 40); p.strokeWeight(1); p.circle(mx, my, bridgeDist * 2);
+      p.stroke(200, 180, 140, 20); p.circle(mx, my, bridgeDist * 2.5);
+      p.fill(200, 180, 140, 25); p.noStroke(); p.circle(mx, my, 8);
+    }
+  };
+  p.mouseMoved = function() { mx = p.mouseX; my = p.mouseY; };
+  p.mouseLeft = function() { mx = -500; my = -500; };
+  p.touchMoved = function(e) {
+    e.preventDefault();
+    const rect = document.getElementById('particle-canvas').getBoundingClientRect();
+    mx = e.touches[0].clientX - rect.left; my = e.touches[0].clientY - rect.top; return false;
+  };
+  p.touchEnded = function() { mx = -500; my = -500; };
+  p.windowResized = function() { const container = document.getElementById('particle-canvas').parentElement; p.resizeCanvas(container.clientWidth, 320); };
+};
+new p5(particleSketch);
+</script>
+</body>
+</html>
