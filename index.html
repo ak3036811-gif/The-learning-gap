@@ -6,727 +6,694 @@
 <title>The Learning Gap — An Interactive Visual Essay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Chocolate + cream palette */
+  --ink:#1a0f0a;          /* deep warm chocolate */
+  --ink2:#2c1a10;         /* mid chocolate */
+  --ink3:#3d2416;         /* lighter chocolate */
+  --paper:#f5ede0;        /* warm cream (the color you attached) */
+  --paper2:#ede0ce;       /* slightly deeper cream */
+  --paper3:#e2d0b8;       /* warm tan */
+  --warm:#c94a2b;         /* terracotta red — kept */
+  --cool:#2a6b8a;         /* muted teal */
+  --gold:#b8821a;         /* amber gold */
+  --muted:#7a5c48;        /* warm brown-grey */
+  --border:rgba(26,15,10,0.12);
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--paper);font-family:var(--sans);font-weight:300;line-height:1.8;overflow-x:hidden;cursor:crosshair}
 
-  :root {
-    --ink: #0e0e0e;
-    --paper: #f5f0e8;
-    --paper2: #ede6d6;
-    --accent: #c4392d;
-    --accent2: #1a6b8a;
-    --accent3: #2d7a3a;
-    --gold: #c9901e;
-    --muted: #6b6055;
-    --border: rgba(14,14,14,0.12);
-    --serif: 'Playfair Display', Georgia, serif;
-    --sans: 'DM Sans', sans-serif;
-    --mono: 'DM Mono', monospace;
-  }
+/* PROGRESS */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--warm);z-index:1000;width:0%;transition:width .1s linear}
 
-  html { scroll-behavior: smooth; }
-  body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-weight: 300; line-height: 1.75; overflow-x: hidden; }
+/* NAV DOTS */
+#cnav{position:fixed;right:1.5rem;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:8px}
+.cdot{width:5px;height:5px;border-radius:50%;background:rgba(245,237,224,0.18);cursor:pointer;transition:all .3s;position:relative}
+.cdot::after{content:attr(data-l);position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,0.35);white-space:nowrap;opacity:0;transition:opacity .2s;pointer-events:none}
+.cdot:hover::after{opacity:1}
+.cdot.active{background:var(--warm);transform:scale(1.8)}
 
-  /* ── HERO ── */
-  #hero { position: relative; height: 100vh; min-height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: var(--ink); }
-  #hero-canvas { position: absolute; inset: 0; opacity: 0.85; }
-  .hero-text { position: relative; z-index: 2; text-align: center; color: var(--paper); padding: 2rem; }
-  .hero-kicker { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(245,240,232,0.55); margin-bottom: 1.5rem; }
-  .hero-title { font-family: var(--serif); font-size: clamp(3rem, 8vw, 6.5rem); font-weight: 700; line-height: 1.05; margin-bottom: 1.25rem; letter-spacing: -0.02em; }
-  .hero-title em { font-style: italic; color: #e8a87c; }
-  .hero-sub { font-size: 1.05rem; font-weight: 300; color: rgba(245,240,232,0.7); max-width: 520px; margin: 0 auto 2.5rem; }
-  .scroll-cue { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,240,232,0.4); display: flex; flex-direction: column; align-items: center; gap: 8px; animation: float 2.5s ease-in-out infinite; }
-  .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, rgba(245,240,232,0.4), transparent); }
-  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
-  .hero-byline { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 2.5rem; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; }
-  .byline-name { color: rgba(245,240,232,0.75); }
-  .byline-sep { color: rgba(245,240,232,0.3); }
-  .byline-org { color: #e8a87c; text-decoration: none; border-bottom: 1px solid rgba(232,168,124,0.35); transition: border-color 0.2s; }
-  .byline-org:hover { border-color: #e8a87c; }
+/* SOUND BTN */
+#sound-btn{position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;background:rgba(26,15,10,0.88);border:1px solid rgba(245,237,224,0.1);color:rgba(245,237,224,0.35);font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;padding:.5rem .8rem;cursor:pointer;transition:all .2s;backdrop-filter:blur(4px)}
+#sound-btn:hover{color:rgba(245,237,224,0.65);border-color:rgba(245,237,224,0.22)}
+#sound-btn.on{color:var(--warm);border-color:rgba(201,74,43,0.3)}
 
-  /* ── CHAPTER NAV ── */
-  #chapter-nav { position: fixed; right: 1.5rem; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 10px; }
-  .nav-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(14,14,14,0.2); cursor: pointer; transition: all 0.3s ease; position: relative; }
-  .nav-dot::before { content: attr(data-label); position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-family: var(--mono); font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); white-space: nowrap; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-  .nav-dot:hover::before { opacity: 1; }
-  .nav-dot.active { background: var(--accent); transform: scale(1.6); }
-  .nav-dot.light { background: rgba(245,240,232,0.3); }
-  .nav-dot.light.active { background: #e8a87c; }
+/* ── OPENING — no typewriter, title shows immediately ── */
+#opening{position:relative;height:100vh;min-height:600px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--ink)}
+.opening-text{position:relative;z-index:10;text-align:center;max-width:700px;padding:2rem;display:flex;flex-direction:column;align-items:center}
 
-  /* ── SECTIONS ── */
-  .section { max-width: 760px; margin: 0 auto; padding: 6rem 2rem; }
-  .section-wide { max-width: 100%; padding: 5rem 0; background: var(--paper2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-  .section-wide-inner { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
-  .section-dark { background: var(--ink); color: var(--paper); padding: 5rem 0; border: none; }
-  .section-dark .section-inner { max-width: 760px; margin: 0 auto; padding: 0 2rem; }
-  .section-dark p { color: rgba(245,240,232,0.78); }
-  .section-dark .pull-quote { color: var(--paper); border-color: rgba(245,240,232,0.25); }
+.opening-main{
+  font-family:var(--serif);font-size:clamp(3.5rem,9vw,7rem);font-weight:300;
+  line-height:1;letter-spacing:-.03em;color:var(--paper);
+  opacity:0;transform:translateY(22px);
+  animation:fadeUp 1.2s cubic-bezier(.16,1,.3,1) .3s forwards;
+}
+.opening-main em{font-style:italic;color:var(--warm)}
+@keyframes fadeUp{to{opacity:1;transform:none}}
 
-  .chapter-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; }
-  .chapter-label::after { content: ''; flex: 1; height: 1px; background: var(--accent); opacity: 0.3; max-width: 60px; }
-  h2.section-title { font-family: var(--serif); font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; line-height: 1.15; margin-bottom: 2rem; letter-spacing: -0.02em; }
-  h3.sub-heading { font-family: var(--serif); font-size: 1.35rem; font-weight: 400; font-style: italic; margin: 2.5rem 0 1rem; color: var(--muted); }
-  p { margin-bottom: 1.5rem; font-size: 1.0625rem; }
-  p:last-child { margin-bottom: 0; }
+.opening-sub{
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(245,237,224,.3);margin-top:2rem;
+  opacity:0;animation:fadeIn 1s ease 1.2s forwards;
+}
+@keyframes fadeIn{to{opacity:1}}
 
-  .pull-quote { font-family: var(--serif); font-size: 1.5rem; font-style: italic; line-height: 1.5; border-left: 3px solid var(--accent); padding: 1rem 0 1rem 1.5rem; margin: 2.5rem 0; color: var(--ink); }
-  .stat-inline { font-family: var(--serif); font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+.scroll-down{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:2.5rem;opacity:0;animation:fadeIn 1s ease 1.8s forwards}
+.scroll-line{width:1px;height:44px;background:linear-gradient(to bottom,rgba(201,74,43,.7),transparent);animation:pulse-line 2s ease-in-out infinite}
+@keyframes pulse-line{0%,100%{opacity:.35;transform:scaleY(1)}50%{opacity:.9;transform:scaleY(1.05)}}
 
-  /* ── VIGNETTE CARDS ── */
-  .vignette-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin: 3rem 0; }
-  .vignette { background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem; position: relative; }
-  .vignette::before { content: '"'; font-family: var(--serif); font-size: 4rem; color: var(--accent); opacity: 0.2; position: absolute; top: 0.25rem; left: 1rem; line-height: 1; }
-  .vignette-text { font-size: 0.9375rem; line-height: 1.65; margin-bottom: 1rem; padding-top: 0.5rem; }
-  .vignette-byline { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
-  .vignette-tag { display: inline-block; font-family: var(--mono); font-size: 0.65rem; padding: 2px 8px; border-radius: 2px; margin-bottom: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
-  .tag-gap { background: #fde8e6; color: var(--accent); }
-  .tag-bridge { background: #e2f0e4; color: var(--accent3); }
-  .tag-access { background: #e0eff5; color: var(--accent2); }
+/* ── SECTIONS ── */
+.scene{background:var(--ink);padding:5rem 0;position:relative;overflow:hidden}
+.scene-inner{max-width:720px;margin:0 auto;padding:0 2.5rem}
+.paper-section{background:var(--paper);color:var(--ink);padding:5rem 0}
+.paper-section-inner{max-width:720px;margin:0 auto;padding:0 2.5rem}
+.paper-wide{background:var(--paper2);color:var(--ink);padding:4.5rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.paper-wide-inner{max-width:960px;margin:0 auto;padding:0 2.5rem}
 
-  /* ── DATA VISUALIZATIONS ── */
-  .viz-container { margin: 2.5rem 0; background: var(--paper); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .viz-header { padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; justify-content: space-between; }
-  .viz-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-  .viz-note { font-family: var(--mono); font-size: 0.65rem; color: rgba(107,96,85,0.6); }
-  .viz-body { padding: 1.5rem 1.25rem; }
+/* ── TYPE ── */
+.act-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--warm);margin-bottom:1.5rem;display:flex;align-items:center;gap:12px}
+.act-label::after{content:'';flex:1;height:1px;background:var(--warm);opacity:.22;max-width:80px}
+h2.act-title{font-family:var(--serif);font-size:clamp(2.2rem,4.5vw,3.6rem);font-weight:300;line-height:1.1;letter-spacing:-.02em;margin-bottom:2rem}
+h2.act-title em{font-style:italic}
+h3.act-sub{font-family:var(--serif);font-size:1.3rem;font-weight:300;font-style:italic;margin:2.5rem 0 1rem;color:var(--muted)}
+.paper-section h3.act-sub{color:#7a5c48}
+p{font-size:1rem;line-height:1.8;margin-bottom:1.4rem;color:rgba(245,237,224,.72)}
+p:last-child{margin-bottom:0}
+.paper-section p,.paper-wide p{color:rgba(26,15,10,.68)}
+.pull{font-family:var(--serif);font-size:clamp(1.2rem,2.3vw,1.55rem);font-style:italic;font-weight:300;line-height:1.55;border-left:2px solid var(--warm);padding:.9rem 0 .9rem 1.6rem;margin:2.5rem 0;color:var(--paper)}
 
-  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0.85rem; }
-  .bar-label { font-family: var(--mono); font-size: 0.72rem; width: 110px; flex-shrink: 0; color: var(--muted); letter-spacing: 0.02em; }
-  .bar-track { flex: 1; height: 10px; background: rgba(14,14,14,0.07); border-radius: 2px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
-  .bar-value { font-family: var(--mono); font-size: 0.72rem; width: 36px; text-align: right; color: var(--ink); }
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .75s ease,transform .75s ease}
+.reveal.in{opacity:1;transform:none}
 
-  /* ── GAIN VIZ ── */
-  .gain-vis { display: flex; flex-direction: column; gap: 1rem; }
-  .gain-row { display: flex; align-items: center; gap: 12px; }
-  .gain-label { font-family: var(--mono); font-size: 0.7rem; width: 90px; flex-shrink: 0; color: var(--muted); }
-  .gain-track { flex: 1; height: 24px; background: rgba(14,14,14,0.06); border-radius: 2px; position: relative; overflow: hidden; }
-  .gain-before { height: 100%; background: rgba(196,57,45,0.25); border-radius: 2px; display: flex; align-items: center; padding-left: 8px; font-family: var(--mono); font-size: 0.65rem; color: var(--accent); position: absolute; left: 0; top: 0; transition: width 1s ease; }
-  .gain-after { height: 100%; background: rgba(45,122,58,0.3); border-radius: 2px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-family: var(--mono); font-size: 0.65rem; color: var(--accent3); position: absolute; left: 0; top: 0; transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s; }
+/* TWO SCREENS */
+.two-screens{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:3rem 0;border:1px solid rgba(245,237,224,.07)}
+.screen{padding:1.75rem;position:relative;min-height:240px;display:flex;flex-direction:column;justify-content:space-between}
+.screen-a{background:rgba(42,107,138,.08);border-right:1px solid rgba(245,237,224,.06)}
+.screen-b{background:rgba(201,74,43,.06)}
+.screen-header{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.screen-a .screen-header{color:var(--cool)}.screen-b .screen-header{color:var(--warm)}
+.screen-dot{width:6px;height:6px;border-radius:50%}
+.screen-a .screen-dot{background:var(--cool)}.screen-b .screen-dot{background:var(--warm)}
+.screen-query{font-family:var(--mono);font-size:.76rem;line-height:1.65;padding:.85rem 1rem;border-radius:2px;margin-bottom:1rem;color:rgba(245,237,224,.45)}
+.screen-a .screen-query{background:rgba(42,107,138,.14);border-left:2px solid var(--cool)}
+.screen-b .screen-query{background:rgba(201,74,43,.09);border-left:2px solid var(--warm)}
+.screen-response{font-size:.86rem;line-height:1.65;color:rgba(245,237,224,.48)}
+.screen-a .screen-response{color:rgba(245,237,224,.63)}
+.screen-outcome{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;margin-top:1.25rem;padding-top:.9rem;border-top:1px solid rgba(245,237,224,.07)}
+.screen-a .screen-outcome{color:rgba(42,107,138,.75)}.screen-b .screen-outcome{color:rgba(201,74,43,.65)}
 
-  /* ── PARTICLE CANVAS ── */
-  #particle-canvas { width: 100%; height: 320px; display: block; cursor: crosshair; }
-  .canvas-caption { font-family: var(--mono); font-size: 0.68rem; text-align: center; padding: 0.75rem; color: var(--muted); border-top: 1px solid var(--border); letter-spacing: 0.06em; }
+/* FAIL GRID */
+.fail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(245,237,224,.05);margin:2.5rem 0;border:1px solid rgba(245,237,224,.05)}
+.fail-cell{background:var(--ink);padding:1.5rem 1.4rem;position:relative}
+.fail-num{font-family:var(--serif);font-size:2.8rem;font-weight:300;line-height:1;color:rgba(245,237,224,.06);margin-bottom:.4rem}
+.fail-title{font-family:var(--serif);font-size:1rem;font-weight:600;margin-bottom:.6rem;color:var(--paper)}
+.fail-body{font-size:.855rem;line-height:1.62;color:rgba(245,237,224,.42);margin:0}
+.fail-bar{position:absolute;bottom:0;left:0;height:2px;background:var(--warm);opacity:.38;transition:width 1s ease}
 
-  /* ── ORNAMENT ── */
-  .ornament { text-align: center; font-family: var(--serif); font-size: 1.2rem; color: var(--accent); opacity: 0.4; margin: 0.5rem 0; letter-spacing: 0.4em; }
+/* ECOSYSTEM */
+#ecosystem-section{background:#140a06;padding:0}
+#ecosystem-header{padding:4.5rem 2.5rem 2.5rem;max-width:720px;margin:0 auto}
+#ecosystem-canvas-wrap{position:relative;width:100%;background:#140a06}
+#ecosystem-canvas{display:block;width:100%;cursor:crosshair}
+#ecosystem-controls{padding:2rem 2.5rem;max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:1.75rem}
+.ctrl-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,237,224,.32);margin-bottom:.65rem;display:flex;justify-content:space-between}
+.ctrl-label span{color:var(--warm);font-variant-numeric:tabular-nums}
+.ctrl-track{width:100%;-webkit-appearance:none;appearance:none;height:2px;background:rgba(245,237,224,.08);outline:none;cursor:pointer}
+.ctrl-track::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--warm);cursor:pointer}
+.ctrl-track::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--warm);border:none;cursor:pointer}
+.outcome-readout{padding:1.75rem 2.5rem 0;max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem}
+.readout-card{border-top:1px solid rgba(245,237,224,.09);padding-top:.9rem}
+.readout-num{font-family:var(--serif);font-size:2rem;font-weight:300;line-height:1;margin-bottom:.25rem;transition:all .4s ease}
+.readout-label{font-family:var(--mono);font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,.28)}
+#insight-panel{max-width:720px;margin:0 auto;padding:1.5rem 2.5rem 0;min-height:3.5rem}
+#insight-text{font-family:var(--serif);font-size:1.05rem;font-style:italic;color:rgba(245,237,224,0);border-left:2px solid transparent;padding-left:1rem;transition:color .7s ease,border-color .7s ease;line-height:1.6}
+#insight-text.active{color:rgba(245,237,224,.72);border-left-color:var(--warm)}
+#insight-text.s-crisis{border-left-color:#c94a2b!important;color:rgba(220,90,60,.9)!important}
+#insight-text.s-warning{border-left-color:var(--gold)!important;color:rgba(200,150,40,.85)!important}
+#insight-text.s-progress{border-left-color:#2d9a48!important;color:rgba(55,170,80,.85)!important}
+#insight-text.s-optimal{border-left-color:#2a6b8a!important;color:rgba(42,107,138,.92)!important}
+#gap-history-wrap{max-width:720px;margin:0 auto;padding:1.75rem 2.5rem 4rem}
+#gap-history-label{font-family:var(--mono);font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,.16);margin-bottom:.45rem;display:flex;justify-content:space-between}
+#gap-history-canvas{display:block;width:100%;height:56px}
 
-  /* ── NUMBERS / STATS ── */
-  .big-number { font-family: var(--serif); font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
-  .stat-cluster { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1.5rem; margin: 2.5rem 0; }
-  .stat-card { padding: 1.25rem; border: 1px solid var(--border); border-radius: 4px; }
-  .stat-card .big-number { font-size: 2.5rem; margin-bottom: 0.3rem; }
-  .stat-card p { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+/* TENSION GRID */
+.tension-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:2.5rem 0}
+.tension-col{padding:2rem;border:1px solid var(--border)}
+.tension-col.promise{background:rgba(42,107,138,.04)}.tension-col.risk{background:rgba(201,74,43,.04)}
+.tension-head{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:.65rem;border-bottom:1px solid var(--border)}
+.tension-col.promise .tension-head{color:var(--cool)}.tension-col.risk .tension-head{color:var(--warm)}
+.tension-item{font-size:.88rem;line-height:1.68;color:rgba(26,15,10,.58);margin-bottom:.55rem;display:flex;align-items:flex-start;gap:8px}
+.tension-item::before{content:'—';font-family:var(--mono);font-size:.68rem;margin-top:.2rem;flex-shrink:0;opacity:.38}
 
-  /* ── RESEARCH CHAPTER ── */
-  .method-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 2.5rem 0; }
-  .method-card { border: 1px solid var(--border); border-radius: 4px; padding: 1.25rem; background: var(--paper2); position: relative; overflow: hidden; }
-  .method-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; }
-  .method-card.ai-card::after { background: var(--accent2); }
-  .method-card.trad-card::after { background: var(--gold); }
-  .method-card.hybrid-card::after { background: var(--accent3); }
-  .method-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; }
-  .method-score { font-family: var(--serif); font-size: 2.25rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; }
-  .method-gain { font-family: var(--mono); font-size: 0.8rem; margin-bottom: 0.75rem; }
-  .method-desc { font-size: 0.875rem; line-height: 1.55; color: var(--muted); margin: 0; }
+/* DATA */
+.data-panel{background:var(--ink);border:1px solid rgba(245,237,224,.05);margin:2.5rem 0;overflow:hidden}
+.data-panel-head{padding:.9rem 1.4rem;border-bottom:1px solid rgba(245,237,224,.05);display:flex;justify-content:space-between;align-items:baseline}
+.data-panel-title{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,.32)}
+.data-panel-body{padding:1.4rem}
+.race-row{display:grid;grid-template-columns:100px 1fr 60px;gap:12px;align-items:center;margin-bottom:1.1rem}
+.race-lbl{font-family:var(--mono);font-size:.66rem;color:rgba(245,237,224,.38);letter-spacing:.04em}
+.race-outer{height:22px;background:rgba(245,237,224,.04);position:relative;overflow:hidden}
+.race-bar{height:100%;position:absolute;left:0;top:0;display:flex;align-items:center;padding-left:9px;font-family:var(--mono);font-size:.63rem;color:rgba(245,237,224,.78);transition:width 1.4s cubic-bezier(.16,1,.3,1);white-space:nowrap;overflow:hidden}
+.race-delta{font-family:var(--mono);font-size:.66rem;text-align:right}
 
-  .race-track { margin: 2.5rem 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .race-header { display: flex; justify-content: space-between; align-items: baseline; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-  .race-body { padding: 1.5rem 1.25rem; }
-  .race-row { display: grid; grid-template-columns: 90px 1fr 60px; align-items: center; gap: 12px; margin-bottom: 1.1rem; }
-  .race-label { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--muted); }
-  .race-outer { height: 28px; background: rgba(14,14,14,0.06); border-radius: 2px; overflow: hidden; }
-  .race-bar { height: 100%; border-radius: 2px; display: flex; align-items: center; padding-left: 10px; font-family: var(--mono); font-size: 0.68rem; color: white; transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1); white-space: nowrap; overflow: hidden; }
-  .race-delta { font-family: var(--mono); font-size: 0.72rem; text-align: right; }
+/* METHOD CARDS */
+.method-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(245,237,224,.04);margin:2.5rem 0}
+.method-card{background:var(--ink);padding:1.5rem 1.4rem;position:relative;overflow:hidden}
+.method-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.method-card.ai::after{background:var(--cool)}.method-card.trad::after{background:var(--gold)}.method-card.hybrid::after{background:#2d7a3a}
+.m-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,.28);margin-bottom:.65rem}
+.m-score{font-family:var(--serif);font-size:2.8rem;font-weight:300;line-height:1;margin-bottom:.2rem}
+.m-gain{font-family:var(--mono);font-size:.72rem;margin-bottom:.65rem}
+.m-desc{font-size:.84rem;line-height:1.6;color:rgba(245,237,224,.38);margin:0}
 
-  .two-col-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0; }
-  .compare-card { border: 1px solid var(--border); border-radius: 4px; padding: 1.5rem; background: var(--paper2); }
-  .compare-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
-  .compare-label::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--border); display: inline-block; }
-  .compare-card.adaptive .compare-label::before { background: var(--accent3); }
-  .compare-card.static .compare-label::before { background: var(--accent); }
-  .compare-big { font-family: var(--serif); font-size: 3rem; font-weight: 700; line-height: 1; margin-bottom: 0.2rem; }
-  .compare-sub { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 0.05em; }
+/* GAIN VIS */
+.gain-vis{display:flex;flex-direction:column;gap:.9rem;margin:1.75rem 0}
+.gain-row{display:flex;align-items:center;gap:10px}
+.gain-lbl{font-family:var(--mono);font-size:.63rem;width:80px;flex-shrink:0;color:rgba(245,237,224,.32)}
+.gain-track{flex:1;height:18px;background:rgba(245,237,224,.04);position:relative;overflow:hidden}
+.gain-before{position:absolute;left:0;top:0;height:100%;background:rgba(201,74,43,.28);display:flex;align-items:center;padding-left:5px;font-family:var(--mono);font-size:.58rem;color:rgba(201,74,43,.78)}
+.gain-after{position:absolute;left:0;top:0;height:100%;background:rgba(45,122,58,.33);display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-family:var(--mono);font-size:.58rem;color:rgba(45,180,80,.88);transition:width 1.2s cubic-bezier(.16,1,.3,1) .2s}
 
-  /* ── SCROLL REVEAL ── */
-  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .reveal.visible { opacity: 1; transform: none; }
+/* PLATFORM FEATURES */
+.platform-features{display:grid;grid-template-columns:40px 1fr;gap:.65rem 1.1rem;margin:2rem 0;align-items:start}
+.feat-num{font-family:var(--serif);font-size:1.9rem;font-weight:300;color:var(--warm);line-height:1.1;opacity:.55}
+.feat-content{margin-bottom:1.25rem}
+.feat-title{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin-bottom:.35rem;color:var(--paper)}
+.feat-body{font-size:.875rem;color:rgba(245,237,224,.48);line-height:1.68;margin:0}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin:2.5rem 0}
+.stat-c{border-top:1px solid rgba(245,237,224,.08);padding-top:.9rem}
+.stat-big{font-family:var(--serif);font-size:2.6rem;font-weight:300;line-height:1;margin-bottom:.25rem;color:var(--paper)}
+.stat-note{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,237,224,.28)}
 
-  /* ── FOOTER ── */
-  footer { background: var(--ink); color: rgba(245,240,232,0.45); text-align: center; padding: 3rem 2rem; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; }
-  footer a { color: rgba(245,240,232,0.6); }
+/* CLOSING */
+#closing{background:var(--ink2);padding:7rem 0 6rem;position:relative;overflow:hidden}
+#closing-canvas{position:absolute;inset:0;opacity:.35;pointer-events:none;z-index:1}
+.closing-inner{max-width:720px;margin:0 auto;padding:0 2.5rem;position:relative;z-index:2}
+.closing-question{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:300;line-height:1.18;color:var(--paper);margin-bottom:2.5rem}
+.closing-question em{color:var(--warm);font-style:italic}
+.links-row{display:flex;flex-wrap:wrap;gap:.65rem;margin-top:2.5rem}
+.ext-link{font-family:var(--mono);font-size:.63rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,237,224,.45);border:1px solid rgba(245,237,224,.1);padding:.5rem .9rem;text-decoration:none;transition:all .2s}
+.ext-link:hover{color:var(--paper);border-color:rgba(245,237,224,.36)}
+.ext-link.primary{color:var(--paper);border-color:rgba(245,237,224,.28)}
+footer{background:#0e0704;padding:2.5rem 2.5rem;max-width:720px;margin:0 auto;font-family:var(--mono);font-size:.63rem;color:rgba(245,237,224,.18);line-height:1.9}
+footer a{color:rgba(245,237,224,.28);text-decoration:none}
 
-  /* ── PROGRESS ── */
-  #reading-progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); z-index: 1000; transition: width 0.1s linear; width: 0%; }
-
-  @media (max-width: 600px) {
-    .vignette-grid { grid-template-columns: 1fr; }
-    .stat-cluster { grid-template-columns: 1fr 1fr; }
-    .bar-label { width: 80px; font-size: 0.65rem; }
-    #particle-canvas { height: 260px !important; touch-action: none; }
-    .hero-title { font-size: clamp(2.4rem, 12vw, 4rem); }
-    .section { padding: 4rem 1.25rem; }
-    .section-wide-inner { padding: 0 1.25rem; }
-    .pull-quote { font-size: 1.2rem; }
-    .gain-label { width: 60px; font-size: 0.65rem; }
-    .viz-header { flex-direction: column; gap: 4px; }
-    .method-grid { grid-template-columns: 1fr; }
-    .two-col-stat { grid-template-columns: 1fr; }
-    #chapter-nav { display: none; }
-  }
+@media(max-width:640px){
+  .two-screens,.tension-grid{grid-template-columns:1fr}
+  .screen-a{border-right:none;border-bottom:1px solid rgba(245,237,224,.06)}
+  .fail-grid,.method-row{grid-template-columns:1fr}
+  #ecosystem-controls{grid-template-columns:1fr;gap:1.25rem}
+  .outcome-readout,.stat-row{grid-template-columns:repeat(2,1fr)}
+  .race-row{grid-template-columns:80px 1fr 50px}
+  #cnav{display:none}
+}
 </style>
 </head>
 <body>
 
-<div id="reading-progress"></div>
-
-<nav id="chapter-nav" aria-label="Chapter navigation">
-  <div class="nav-dot light active" data-section="hero" data-label="Intro"></div>
-  <div class="nav-dot" data-section="ch1" data-label="Two Students"></div>
-  <div class="nav-dot" data-section="vignettes" data-label="Voices"></div>
-  <div class="nav-dot" data-section="ch2" data-label="The Platform"></div>
-  <div class="nav-dot" data-section="ch3" data-label="The Workshops"></div>
-  <div class="nav-dot" data-section="ch4" data-label="20% → 80%"></div>
-  <div class="nav-dot" data-section="ch5" data-label="The Divide"></div>
-  <div class="nav-dot" data-section="ch6" data-label="Research I"></div>
-  <div class="nav-dot" data-section="ch7" data-label="Research II"></div>
-  <div class="nav-dot light" data-section="closing" data-label="Closing"></div>
+<div id="progress"></div>
+<nav id="cnav">
+  <div class="cdot active" data-s="opening" data-l="Opening"></div>
+  <div class="cdot" data-s="act1" data-l="The Gap"></div>
+  <div class="cdot" data-s="act2" data-l="Why Solutions Fail"></div>
+  <div class="cdot" data-s="act3" data-l="What AI Changes"></div>
+  <div class="cdot" data-s="act4" data-l="What AI Can't Fix"></div>
+  <div class="cdot" data-s="act5" data-l="The Data"></div>
+  <div class="cdot" data-s="act6" data-l="The Work"></div>
+  <div class="cdot" data-s="closing" data-l="Closing"></div>
 </nav>
+<button id="sound-btn">◯ sound</button>
 
-<!-- ═══════════════════ HERO ═══════════════════ -->
-<section id="hero" data-nav="hero">
-  <canvas id="hero-canvas"></canvas>
-  <div class="hero-text">
-    <p class="hero-kicker">An interactive visual essay</p>
-    <h1 class="hero-title">The Learning<br><em>Gap</em></h1>
-    <p class="hero-sub">How the AI revolution is widening the gulf between those who can navigate it and those who cannot — and what one classroom experiment showed us about closing it.</p>
-    <div class="hero-byline">
-      <span class="byline-name">Ayush Kumar</span>
-      <span class="byline-sep">·</span>
-      <a href="https://ak3036811-gif.github.io/algobridge-learn/" class="byline-org">Founder, AlgoBridge</a>
+<!-- OPENING — title appears directly, no typewriter -->
+<section id="opening" data-nav="opening">
+  <div class="opening-text">
+    <h1 class="opening-main">The Learning<br><em>Gap</em></h1>
+    <p class="opening-sub">Ayush Kumar · Founder, AlgoBridge · 2025–2026</p>
+    <div class="scroll-down"><div class="scroll-line"></div></div>
+  </div>
+</section>
+
+<!-- ACT I -->
+<section id="act1" data-nav="act1">
+  <div class="scene">
+    <div class="scene-inner">
+      <div class="act-label">Act I · The Gap</div>
+      <h2 class="act-title reveal">Two students.<br>Same question.<br><em>Different futures.</em></h2>
+      <div class="two-screens reveal">
+        <div class="screen screen-a">
+          <div>
+            <div class="screen-header"><span class="screen-dot"></span>Student A · prior exposure to CS</div>
+            <div class="screen-query">"explain gradient descent like i already know calculus"</div>
+            <div class="screen-response">The AI meets her vocabulary. Chain rule notation, loss landscape diagrams, step-size intuition. She reads it twice. She keeps going.</div>
+          </div>
+          <div class="screen-outcome">→ continues. asks four more questions.</div>
+        </div>
+        <div class="screen screen-b">
+          <div>
+            <div class="screen-header"><span class="screen-dot"></span>Student B · no prior exposure</div>
+            <div class="screen-query">"what is gradient descent"</div>
+            <div class="screen-response">The AI returns a wall calibrated for the people who built it. Loss function. Partial derivative. Hyperparameter. Lost by sentence two. She closes the tab.</div>
+          </div>
+          <div class="screen-outcome">→ stops. doesn't try again today.</div>
+        </div>
+      </div>
+      <p class="reveal">The AI didn't create this inequality. It <em style="color:var(--paper)">inherited</em> it — from every textbook, every gate-kept course, every resource designed for the person who already knows a little. Then it amplified it at scale.</p>
+      <div class="pull reveal">"Every learner has a threshold — the point where confusion tips into understanding. The gap is not the distance between students. It's the distance between each student and their threshold. AI moved that threshold closer. It didn't make it visible."</div>
+      <p class="reveal">I watched this happen in classrooms, in NGOs, in data I collected myself across 100 students and five organisations. What follows is not a description of a problem. It is an argument — built from code, data, and two years of trying to close something that keeps widening.</p>
     </div>
-    <div class="scroll-cue">
-      <span>Scroll to begin</span>
-      <div class="scroll-line"></div>
+  </div>
+  <div class="paper-wide reveal">
+    <div class="paper-wide-inner">
+      <p class="act-label" style="color:var(--warm)">From the classroom · composite portraits</p>
+      <h2 class="act-title" style="color:var(--ink)">The students behind the data.</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(26,15,10,0.08);margin-top:2rem">
+        <div style="background:var(--paper2);padding:1.6rem">
+          <div style="font-family:var(--mono);font-size:.57rem;letter-spacing:.15em;text-transform:uppercase;color:var(--warm);margin-bottom:.65rem">Access barrier</div>
+          <p style="color:rgba(26,15,10,.64);font-size:.9rem;line-height:1.7;margin:0">"I tried the AI chatbot my teacher recommended. But I only have limited mobile data. I couldn't keep the tab open long enough to finish a lesson."</p>
+          <div style="font-family:var(--mono);font-size:.56rem;color:rgba(26,15,10,.28);margin-top:1rem;text-transform:uppercase;letter-spacing:.1em">Student · 17 · workshop cohort</div>
+        </div>
+        <div style="background:var(--paper2);padding:1.6rem">
+          <div style="font-family:var(--mono);font-size:.57rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,15,10,.32);margin-bottom:.65rem">Honest confusion</div>
+          <p style="color:rgba(26,15,10,.64);font-size:.9rem;line-height:1.7;margin:0">"I had ChatGPT explain gradient descent to me five times. I still didn't understand. I started thinking I was just bad at this."</p>
+          <div style="font-family:var(--mono);font-size:.56rem;color:rgba(26,15,10,.28);margin-top:1rem;text-transform:uppercase;letter-spacing:.1em">Student · 16 · workshop cohort</div>
+        </div>
+        <div style="background:var(--paper3);padding:1.6rem">
+          <div style="font-family:var(--mono);font-size:.57rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:.65rem">Breakthrough</div>
+          <p style="color:rgba(26,15,10,.64);font-size:.9rem;line-height:1.7;margin:0">"I went from thinking I was 'not a math person' to understanding how decision trees work in one workshop. The difference was someone explaining from where I actually was."</p>
+          <div style="font-family:var(--mono);font-size:.56rem;color:rgba(26,15,10,.28);margin-top:1rem;text-transform:uppercase;letter-spacing:.1em">Student · 13 · workshop cohort</div>
+        </div>
+        <div style="background:var(--paper3);padding:1.6rem">
+          <div style="font-family:var(--mono);font-size:.57rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(26,15,10,.32);margin-bottom:.65rem">Unexpected</div>
+          <p style="color:rgba(26,15,10,.64);font-size:.9rem;line-height:1.7;margin:0">"I thought AI would make learning easier. Mostly it made me realise how much I didn't know. That was uncomfortable. But I think it was actually useful."</p>
+          <div style="font-family:var(--mono);font-size:.56rem;color:rgba(26,15,10,.28);margin-top:1rem;text-transform:uppercase;letter-spacing:.1em">Student · 18 · workshop cohort</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ═══════════════════ CHAPTER 1 ═══════════════════ -->
-<div class="section reveal" id="ch1" data-nav="ch1">
-  <p class="chapter-label">Chapter I</p>
-  <h2 class="section-title">Two students.<br>One curriculum.<br>A world apart.</h2>
-
-  <p>Imagine two students sitting down to learn the same thing on the same day. Both are curious. Both are motivated. The difference isn't talent or effort — it's what happens the moment they get stuck.</p>
-
-  <p>The first student types a question into an AI assistant. It returns a wall of jargon calibrated for someone who already understands the prerequisites. She's lost within two paragraphs. She closes the tab.</p>
-
-  <p>The second student rephrases the same question three times, drawing on vocabulary from years of prep courses and after-school tutoring. The AI meets him where he is. He keeps going.</p>
-
-  <div class="pull-quote reveal">
-    "The AI didn't create this inequality. It inherited it — and then it amplified it."
-  </div>
-
-  <p>What we are witnessing is not a single gap but a compounding one. The gap in prior knowledge begets a gap in the ability to use new tools, which begets a gap in outcomes, which begets a gap in opportunity. Round and round.</p>
-
-  <p>I understood this pattern before I understood AI. During a data science apprenticeship with <a href="https://ak3036811-gif.github.io/Main-Website/" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.25)">DOT Glasses</a> — a social-impact company providing affordable prescription eyewear to underserved communities — I researched what happens when people can't access corrective lenses. A student who can't see the board falls behind. Not from lack of intelligence, but lack of access. A worker with blurred vision risks losing their livelihood. The smallest barrier, removed at the right moment, can change an entire trajectory. Our team placed 2nd globally in the pitching finale with an access-focused solution. The insight stayed with me. AI literacy is the same kind of barrier — invisible, structural, and fixable.</p>
-</div>
-
-<!-- ═══════════════════ VIGNETTES ═══════════════════ -->
-<div class="section-wide reveal" id="vignettes" data-nav="vignettes">
-  <div class="section-wide-inner">
-    <p class="chapter-label">From the classroom</p>
-    <h2 class="section-title" style="max-width:600px">The students behind the data</h2>
-    <p style="max-width:620px;margin-bottom:2rem;font-size:1.0625rem;color:var(--muted)">These are composite portraits drawn from real classroom experiences across AlgoBridge workshops. Names are illustrative. The barriers are unchanged.</p>
-
-    <div class="vignette-grid">
-      <div class="vignette">
-        <span class="vignette-tag tag-gap">Access</span>
-        <p class="vignette-text">"I tried using the AI chatbot my teacher recommended. But I only have limited mobile data. I couldn't keep the tab open long enough to finish a lesson."</p>
-        <div class="vignette-byline">Student, 17 — Workshop cohort</div>
-      </div>
-
-      <div class="vignette">
-        <span class="vignette-tag tag-bridge">Progress</span>
-        <p class="vignette-text">"Before I couldn't explain what an algorithm was. After one session, I was connecting it to how Google Search works, Netflix recommendations — things I use every day."</p>
-        <div class="vignette-byline">Student, 15 — Workshop cohort</div>
-      </div>
-
-      <div class="vignette">
-        <span class="vignette-tag tag-gap">Language</span>
-        <p class="vignette-text">"All the good tutorials assume you already know the basics. When I'm confused and ask for help, the explanation uses words I don't know either. I need to start earlier."</p>
-        <div class="vignette-byline">Student, 16 — Workshop cohort</div>
-      </div>
-
-      <div class="vignette">
-        <span class="vignette-tag tag-access">Infrastructure</span>
-        <p class="vignette-text">"There's no one at school who can answer my questions about coding. I find a tutorial, get stuck, and have nowhere to turn. I just stop."</p>
-        <div class="vignette-byline">Student, 14 — Workshop cohort</div>
-      </div>
-
-      <div class="vignette">
-        <span class="vignette-tag tag-bridge">Breakthrough</span>
-        <p class="vignette-text">"I went from thinking I was 'not a math person' to understanding how decision trees work — in one workshop. The difference was someone who explained it from where I actually was."</p>
-        <div class="vignette-byline">Student, 13 — Workshop cohort</div>
-      </div>
-
-      <div class="vignette">
-        <span class="vignette-tag tag-gap">Confidence</span>
-        <p class="vignette-text">"The hardest part is not knowing if my question is stupid. I need to feel safe to say 'I don't know what an algorithm is' without being judged."</p>
-        <div class="vignette-byline">Student, 18 — Workshop cohort</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ CHAPTER 2 — WORKSHOPS ═══════════════════ -->
-<div class="section-dark reveal" id="ch2" data-nav="ch2">
-  <div class="section-inner">
-    <p class="chapter-label" style="color:#e8a87c">Chapter II</p>
-    <h2 class="section-title" style="color:var(--paper)">The workshops</h2>
-
-    <p>Starting in Grade 11, I designed and ran a free AI literacy programme for students aged 11–18 across 5 NGOs — zero prior coding knowledge required. No jargon, no textbooks. Real-world analogies, interactive decisions, and the belief that understanding AI should not be a privilege.</p>
-
-    <div class="pull-quote" style="border-color:rgba(232,168,124,0.5);color:rgba(245,240,232,0.9)">
-      "The most common question after every session was: 'Where do I keep learning?' — so I built the platform to answer it."
-    </div>
-
-    <p>The workshops were not just about content. They were about demonstrating, to students who had been told algorithms were too complex for them, that understanding AI is not a matter of intelligence. It is a matter of being met where you are.</p>
-
-    <div class="stat-cluster reveal">
-      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
-        <div class="big-number" style="color:#e8a87c">100+</div>
-        <p style="color:rgba(245,240,232,0.5)">Students reached through free workshops</p>
-      </div>
-      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
-        <div class="big-number" style="color:#e8a87c">5</div>
-        <p style="color:rgba(245,240,232,0.5)">NGO partners across the programme</p>
-      </div>
-      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
-        <div class="big-number" style="color:#e8a87c">11–18</div>
-        <p style="color:rgba(245,240,232,0.5)">Age range · zero prior coding needed</p>
-      </div>
-      <div class="stat-card" style="background:rgba(245,240,232,0.06);border-color:rgba(245,240,232,0.12)">
-        <div class="big-number" style="color:#e8a87c">40k+</div>
-        <p style="color:rgba(245,240,232,0.5)">Blog readers across 10+ countries</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════ CHAPTER 3 — PLATFORM ═══════════════════ -->
-<div class="section reveal" id="ch3" data-nav="ch3">
-  <p class="chapter-label">Chapter III</p>
-  <h2 class="section-title">What the research<br>says we should build differently.</h2>
-
-  <p>The most common question after every workshop was: <em>where do I keep learning?</em> So I built a platform to answer it — and every feature is a direct response to something the research identified about how AI-assisted learning currently fails.</p>
-
-  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
-    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">01</div>
-    <div>
-      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">Productive Struggle Timer</div>
-      <p style="margin:0;font-size:1rem;color:var(--muted)">Bjork (1994) shows that introducing difficulties during learning leads to dramatically stronger long-term memory. Hints on the platform unlock only after a minimum independent attempt window. The discomfort is the mechanism — not a bug.</p>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
-    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">02</div>
-    <div>
-      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">AI Hint System — Socratic, not prescriptive</div>
-      <p style="margin:0;font-size:1rem;color:var(--muted)">VanLehn (2011) found that AI tutors that diagnose misconceptions and provide targeted hints outperform both no-feedback and direct-answer systems. The hint hierarchy asks "what direction should you be thinking?" — never the solution itself.</p>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:40px 1fr;gap:1rem;margin:2rem 0;align-items:start">
-    <div style="font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--accent);line-height:1">03</div>
-    <div>
-      <div style="font-family:var(--serif);font-size:1.15rem;font-weight:700;margin-bottom:0.5rem">Mistake Log</div>
-      <p style="margin:0;font-size:1rem;color:var(--muted)">Dunlosky et al. (2013): students who regularly review their errors consistently outperform those who only practise new material. Every error is logged with root cause and correction path — turning failure from discouragement into data.</p>
-    </div>
-  </div>
-
-  <div class="pull-quote reveal">
-    "Access is the floor, not the ceiling. We have spent a decade building the floor. The ceiling — genuine comprehension, genuine capability — requires something harder and more human."
-  </div>
-</div>
-
-<!-- ═══════════════════ CHAPTER 4 — GAIN VIZ ═══════════════════ -->
-<div class="section reveal" id="ch4" data-nav="ch4">
-  <p class="chapter-label">Chapter IV</p>
-  <h2 class="section-title">~20% → ~80%.<br>What that actually means.</h2>
-
-  <p>At the start of each workshop, roughly 1 in 5 students could explain what an algorithm is or describe how it affects their daily life. By the end of a single session, roughly 4 in 5 could — using a real-world example they chose themselves, unprompted.</p>
-
-  <p>Pre/post comprehension checks were conducted at the start and end of every session. The shift was not in memorised definitions. Students spontaneously connected Google Search, Netflix, and WhatsApp recommendations to what they had just learned.</p>
-
-  <div class="viz-container reveal">
-    <div class="viz-header">
-      <span class="viz-title">Pre / post comprehension — AlgoBridge workshops</span>
-      <span class="viz-note">Based on session-level checks · 100+ students</span>
-    </div>
-    <div class="viz-body">
-      <div style="display:flex;gap:16px;margin-bottom:1rem;font-family:var(--mono);font-size:0.68rem;color:var(--muted)">
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(196,57,45,0.35);display:inline-block"></span>Before</span>
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(45,122,58,0.4);display:inline-block"></span>After</span>
-      </div>
-      <div class="gain-vis" id="gain-chart"></div>
-      <p style="font-family:var(--mono);font-size:0.68rem;color:var(--muted);margin-top:1rem;margin-bottom:0">Each row represents one workshop session. Before: % of students who could explain algorithmic logic. After: % who could apply it to a real-world example unprompted.</p>
-    </div>
-  </div>
-
-  <p>These were not students who lacked ability. They were students who had never been introduced to the concept. One session changed that — not because the content was simpler, but because it started from where they actually were.</p>
-</div>
-
-<!-- ═══════════════════ CHAPTER 5 — INTERACTIVE ═══════════════════ -->
-<div class="section-wide reveal" id="ch5" data-nav="ch5">
-  <div class="section-wide-inner">
-    <p class="chapter-label">Chapter V</p>
-    <h2 class="section-title">The divide, made visible</h2>
-    <p style="max-width:640px;margin-bottom:1.5rem;font-size:1.0625rem">Below is a generative model of the gap. Each particle is a learner. Blue particles have access to adaptive scaffolding. Red particles do not. Watch what happens over time — and what changes when you move your cursor into the field.</p>
-  </div>
-
-  <div style="background:var(--ink);border-top:1px solid rgba(14,14,14,0.3);border-bottom:1px solid rgba(14,14,14,0.3)">
-    <canvas id="particle-canvas"></canvas>
-    <div class="canvas-caption" style="background:var(--ink);color:rgba(245,240,232,0.4);border-top:1px solid rgba(245,240,232,0.08)">Move your cursor (or drag on mobile) over the canvas to introduce a bridge. Watch how proximity to support changes trajectories.</div>
-  </div>
-
-  <div class="section-wide-inner" style="padding-top:2.5rem">
-    <p style="max-width:640px;font-size:1.0625rem">The simulation is not precise data. It is a feeling — the feeling of watching potential scatter in the absence of support, and consolidate when support arrives. That feeling is what drives this work.</p>
-  </div>
-</div>
-
-<!-- ═══════════════════ CHAPTER 6 — RESEARCH I ═══════════════════ -->
-<div class="section reveal" id="ch6" data-nav="ch6">
-  <p class="chapter-label">Chapter VI · Research</p>
-  <h2 class="section-title">AI vs. Traditional vs. Hybrid Learning</h2>
-
-  <p>The platform's pedagogical design is grounded in a question I tested empirically: does AI-assisted learning actually produce better outcomes, or does it create the illusion of learning while undermining deeper cognitive development?</p>
-
-  <p>39 top-5% JEE students. Three controlled groups. Two months. The same practice test before and after. The same syllabus, same study time, different method. Performance was measured across four dimensions: score improvement, retention, explanation ability, and engagement.</p>
-
-  <div class="method-grid reveal">
-    <div class="method-card ai-card">
-      <div class="method-label">AI-Only Group · n=13</div>
-      <div class="method-score" style="color:var(--accent2)">210</div>
-      <div class="method-gain" style="color:var(--accent2)">+10 pts · from baseline 200</div>
-      <p class="method-desc">Fastest concept acquisition. Highest initial engagement. But a ceiling emerged — passive reading without active recall compressed the improvement rate. Students who bypassed the struggle window were consistently the weakest performers, despite reporting the highest confidence.</p>
-    </div>
-    <div class="method-card trad-card">
-      <div class="method-label">Traditional-Only Group · n=13</div>
-      <div class="method-score" style="color:var(--gold)">208</div>
-      <div class="method-gain" style="color:var(--gold)">+11 pts · from baseline 197</div>
-      <p class="method-desc">Marginally stronger improvement rate than AI-only. Writing and active recall build more durable memory pathways — storage and retrieval, not just encoding. Slower to acquire concepts, but the cognitive depth runs consistently deeper.</p>
-    </div>
-    <div class="method-card hybrid-card">
-      <div class="method-label">Hybrid Group · n=13</div>
-      <div class="method-score" style="color:var(--accent3)">218</div>
-      <div class="method-gain" style="color:var(--accent3)">+23 pts · from baseline 195</div>
-      <p class="method-desc">Started lowest. Finished highest — by 8 points. In JEE Mains, 8 points is the difference between institutions and cutoffs. The two approaches didn't add together — they compounded. AI for speed; active practice for depth. Both, simultaneously.</p>
-    </div>
-  </div>
-
-  <div class="race-track reveal">
-    <div class="race-header">
-      <span>Final score after 2 months — out of 300</span>
-      <span>JEE Mains practice test</span>
-    </div>
-    <div class="race-body">
-      <div class="race-row">
-        <div class="race-label">AI-Only</div>
-        <div class="race-outer"><div class="race-bar" id="race-ai" style="width:0%;background:var(--accent2)">210</div></div>
-        <div class="race-delta" style="color:var(--accent2)">+10 pts</div>
-      </div>
-      <div class="race-row">
-        <div class="race-label">Traditional</div>
-        <div class="race-outer"><div class="race-bar" id="race-trad" style="width:0%;background:var(--gold)">208</div></div>
-        <div class="race-delta" style="color:var(--gold)">+11 pts</div>
-      </div>
-      <div class="race-row">
-        <div class="race-label">Hybrid</div>
-        <div class="race-outer"><div class="race-bar" id="race-hybrid" style="width:0%;background:var(--accent3)">218</div></div>
-        <div class="race-delta" style="color:var(--accent3)">+23 pts</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="pull-quote reveal">
-    "AI improves performance level. Traditional methods improve the rate of improvement. The hybrid approach does both simultaneously — and the data shows they interact multiplicatively, not additively."
-  </div>
-
-  <p>Three behavioural archetypes emerged across the study — defined not by group assignment, but by how students actually engaged. Passive AI users finished last despite feeling most confident. Disciplined traditional learners finished mid-to-high. Hybrid active learners — those who used AI for understanding then solved independently — finished at the top. The tool mattered less than the behaviour.</p>
-
-  <p>This is not an argument against AI in education. It is an argument for using it correctly — with the cognitive effort preserved, not bypassed. Every design decision in AlgoBridge Learn follows directly from this finding. <a href="https://osf.io/8f4c3" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.3)" target="_blank">Read the full study on OSF →</a></p>
-</div>
-
-<!-- ═══════════════════ CHAPTER 7 — RESEARCH II ═══════════════════ -->
-<div class="section-wide reveal" id="ch7" data-nav="ch7">
-  <div class="section-wide-inner">
-    <p class="chapter-label">Chapter VII · Research</p>
-    <h2 class="section-title">The same principle — tested in a game engine.</h2>
-
-    <p style="max-width:660px;font-size:1.0625rem">Meeting the learner where they are is not just a teaching philosophy. It is a testable mechanism. I ran a second study inside a 2D platformer I built: one version with static difficulty, one with a lightweight AI-adaptive system that adjusts challenge to the player's performance in real time.</p>
-
-    <p style="max-width:660px;font-size:1.0625rem">10 participants. Randomised order to control for learning effects. The question: does matching challenge to skill keep people engaged longer and failing less?</p>
-
-    <div class="two-col-stat reveal">
-      <div class="compare-card static">
-        <div class="compare-label">Static Difficulty</div>
-        <div class="compare-big" style="color:var(--accent)">~12</div>
-        <div class="compare-sub">avg. minutes per session</div>
-        <div style="margin-top:1.5rem">
-          <div class="compare-big" style="color:var(--accent);font-size:2.25rem">~7</div>
-          <div class="compare-sub">avg. retries per level</div>
+<!-- ACT II -->
+<section id="act2" data-nav="act2">
+  <div class="scene">
+    <div class="scene-inner">
+      <div class="act-label">Act II · Why Existing Solutions Fail</div>
+      <h2 class="act-title reveal">We've had tools.<br>They haven't <em>worked.</em></h2>
+      <p class="reveal">The answer to educational inequality for twenty years has been: more access. More devices. Faster internet. Free platforms. These things matter — but they confuse access with understanding. A student with ChatGPT still closes the tab if the response is calibrated for someone else.</p>
+      <div class="fail-grid reveal">
+        <div class="fail-cell">
+          <div class="fail-num">01</div>
+          <div class="fail-title">The Textbook Problem</div>
+          <p class="fail-body">Static. One calibration level. Written for a hypothetical average student who doesn't exist. If you're behind it, you stay behind it.</p>
+          <div class="fail-bar" style="width:0%" data-w="70%"></div>
+        </div>
+        <div class="fail-cell">
+          <div class="fail-num">02</div>
+          <div class="fail-title">The Platform Problem</div>
+          <p class="fail-body">Khan Academy, Coursera, YouTube — assume prior vocabulary. The first thing you learn is that you don't know enough to start.</p>
+          <div class="fail-bar" style="width:0%" data-w="85%"></div>
+        </div>
+        <div class="fail-cell">
+          <div class="fail-num">03</div>
+          <div class="fail-title">The AI Problem</div>
+          <p class="fail-body">ChatGPT is the most powerful tutoring tool ever built — and it defaults to the vocabulary of those who already understand. It inherited every assumption it was trained on.</p>
+          <div class="fail-bar" style="width:0%" data-w="55%"></div>
         </div>
       </div>
-      <div class="compare-card adaptive">
-        <div class="compare-label">AI-Adaptive Difficulty</div>
-        <div class="compare-big" style="color:var(--accent3)">~21</div>
-        <div class="compare-sub">avg. minutes per session · <strong style="color:var(--accent3)">+75%</strong></div>
-        <div style="margin-top:1.5rem">
-          <div class="compare-big" style="color:var(--accent3);font-size:2.25rem">~3.5</div>
-          <div class="compare-sub">avg. retries per level · <strong style="color:var(--accent3)">−50%</strong></div>
-        </div>
+      <div class="pull reveal">"Giving everyone access to the same tool isn't equity. It's equity theatre. The tool has to meet you where you are — or the gap just moves online."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ACT III -->
+<section id="act3" data-nav="act3">
+  <div id="ecosystem-section">
+    <div id="ecosystem-header">
+      <div class="act-label" style="color:var(--warm)">Act III · What AI Changes — Live Simulation</div>
+      <h2 class="act-title reveal">Adjust the system.<br>Watch outcomes <em>shift.</em></h2>
+      <p class="reveal" style="color:rgba(245,237,224,.52)">Each node is a learner. Particle size = current comprehension. Blue = above the understanding threshold. Red = below it. Rates calibrated from real data: supported learners gain +58pp/session; unsupported decay at −40%. Change the variables — watch what your decisions do to who crosses the threshold.</p>
+    </div>
+    <div id="ecosystem-canvas-wrap">
+      <canvas id="ecosystem-canvas" height="400"></canvas>
+    </div>
+    <div id="ecosystem-controls">
+      <div class="ctrl-group">
+        <div class="ctrl-label">AI Availability <span id="ai-val">50%</span></div>
+        <input type="range" class="ctrl-track" id="ai-ctrl" min="0" max="100" value="50">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Prior Access <span id="access-val">30%</span></div>
+        <input type="range" class="ctrl-track" id="access-ctrl" min="0" max="100" value="30">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Scaffolding Quality <span id="scaffold-val">40%</span></div>
+        <input type="range" class="ctrl-track" id="scaffold-ctrl" min="0" max="100" value="40">
       </div>
     </div>
-
-    <p style="max-width:660px;font-size:1.0625rem">75% longer sessions. 50% fewer retries. The mechanism is flow: when challenge matches skill, people don't quit. The same logic applies in a platformer as in a classroom. If the gap between where you are and what's being asked of you is too wide, disengagement isn't a failure of willpower — it's a rational response to a broken system.</p>
-
-    <div class="pull-quote reveal">
-      "The adaptive system didn't make the game easier. It made it possible to keep going — which is exactly what a learning platform must do."
+    <div class="outcome-readout">
+      <div class="readout-card"><div class="readout-num" id="r-above" style="color:var(--cool)">—</div><div class="readout-label">Above threshold</div></div>
+      <div class="readout-card"><div class="readout-num" id="r-below" style="color:var(--warm)">—</div><div class="readout-label">Below threshold</div></div>
+      <div class="readout-card"><div class="readout-num" id="r-gap" style="color:rgba(245,237,224,.38)">—</div><div class="readout-label">Gap size</div></div>
+      <div class="readout-card"><div class="readout-num" id="r-rate" style="color:var(--gold)">—</div><div class="readout-label">Gain rate</div></div>
     </div>
-
-    <p style="max-width:660px;font-size:1.0625rem">The adaptive difficulty system in AlgoBridge Learn tracks accuracy, retry count, and hint usage to route students toward problems at the right challenge level. Same mechanism. Different stakes. <a href="https://osf.io/54dws" style="color:var(--accent2);text-decoration:none;border-bottom:1px solid rgba(26,107,138,0.3)" target="_blank">Read the full study on OSF →</a></p>
-  </div>
-</div>
-
-<!-- ═══════════════════ CLOSING ═══════════════════ -->
-<div class="section-dark reveal" id="closing" data-nav="closing">
-  <div class="section-inner">
-    <p class="chapter-label" style="color:#e8a87c">Closing</p>
-    <h2 class="section-title" style="color:var(--paper)">The gap is not inevitable.</h2>
-
-    <p>There is a version of the AI education story where the technology does what all previous education technology promised: it democratizes access, it personalizes at scale, it turns every student's phone into a patient tutor.</p>
-
-    <p>That version is possible. We have seen it, in small controlled bursts — in workshops where a student who had never heard the word "algorithm" was connecting it, unprompted, to Google Search twenty minutes later. We know the ingredients. The challenge is not technical. It is a choice about who we design for when we design learning systems.</p>
-
-    <p>I didn't start building because I had a plan. I started because every time I looked at the gap — in those workshops, in the DOT Glasses research, in the 40,000 people reading an AI education blog they found on their own — I couldn't justify not trying. The platform is free because it has to be. The research is published because it should be checked. The workshops happened because the question after every session was the same: where do I keep learning? This essay is one more answer to that question.</p>
-
-    <div class="pull-quote" style="border-color:rgba(232,168,124,0.5);color:rgba(245,240,232,0.9)">
-      "One workshop on algorithms could spark a future engineer. I've seen it. That's why the platform is free, and always will be."
-    </div>
-
-    <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:2.5rem">
-      <a href="https://ak3036811-gif.github.io/algobridge-learn/" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--paper);border:1px solid rgba(245,240,232,0.25);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,232,0.7)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.25)'">Try the platform →</a>
-      <a href="https://ak3036811-gif.github.io/Main-Website/" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.55);border:1px solid rgba(245,240,232,0.12);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,232,0.4)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.12)'">Full portfolio →</a>
-      <a href="https://itsreadingtimee.blogspot.com" style="display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.55);border:1px solid rgba(245,240,232,0.12);padding:0.6rem 1.1rem;border-radius:2px;text-decoration:none;transition:border-color 0.2s" onmouseover="this.style.borderColor='rgba(245,240,138,0.4)'" onmouseout="this.style.borderColor='rgba(245,240,232,0.12)'">Read the blog →</a>
-    </div>
-
-    <div style="margin-top:3rem;padding-top:2rem;border-top:1px solid rgba(245,240,232,0.12)">
-      <p style="font-family:var(--mono);font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,240,232,0.4);margin-bottom:0.5rem">Data sources</p>
-      <p style="font-family:var(--mono);font-size:0.72rem;color:rgba(245,240,232,0.35);line-height:1.8;margin:0">AlgoBridge Workshop Data 2024–2025 (pre/post comprehension checks, 100+ students, 5 NGOs) · AlgoBridge Learn platform analytics · AI vs. Traditional Learning: Comparative Study, 2025 — OSF: osf.io/8f4c3 · AI-Adaptive Difficulty in Games, 2025 — OSF: osf.io/54dws · Blog analytics: itsreadingtimee.blogspot.com · All student vignettes are composite portraits. No personally identifying information retained.</p>
+    <div id="insight-panel"><div id="insight-text"></div></div>
+    <div id="gap-history-wrap">
+      <div id="gap-history-label"><span>Gap over time</span><span id="gap-trend-label">—</span></div>
+      <canvas id="gap-history-canvas"></canvas>
     </div>
   </div>
-</div>
+</section>
+
+<!-- ACT IV -->
+<section id="act4" data-nav="act4">
+  <div class="paper-section">
+    <div class="paper-section-inner">
+      <div class="act-label">Act IV · What AI Cannot Fix</div>
+      <h2 class="act-title reveal" style="color:var(--ink)">The honest version<br>of this argument.</h2>
+      <p class="reveal">I built a platform that uses AI to teach. I published research showing AI-assisted hybrid learning outperforms AI-only and traditional methods by 2×. I believe AI is one of the most powerful educational levers in human history. And I think we are deploying it in ways that will make the problem worse before they make it better. Both things are true.</p>
+      <p class="reveal" style="font-style:italic;color:rgba(26,15,10,.52)">I want to sit with that tension for a moment rather than resolve it quickly — because the instinct to resolve it quickly is precisely what produces bad EdTech.</p>
+      <div class="tension-grid reveal">
+        <div class="tension-col promise">
+          <div class="tension-head">What AI genuinely changes</div>
+          <div class="tension-item">Personalisation at scale — one system, every student's level</div>
+          <div class="tension-item">Patience no human tutor can match — 10,000 repetitions without frustration</div>
+          <div class="tension-item">Democratised access to expert explanation, if you know how to ask</div>
+          <div class="tension-item">Immediate feedback on exactly where understanding breaks down</div>
+        </div>
+        <div class="tension-col risk">
+          <div class="tension-head">What AI doesn't fix</div>
+          <div class="tension-item">The vocabulary gap that stops students from asking good questions</div>
+          <div class="tension-item">The confidence barrier — "I don't know if my question is stupid"</div>
+          <div class="tension-item">Passive use produces the illusion of learning without the substance</div>
+          <div class="tension-item">AI-only learners in my study: highest confidence. Worst retention.</div>
+        </div>
+      </div>
+      <p class="reveal">That last finding is the one that should make researchers uncomfortable. Students who bypassed the struggle window felt most prepared — and performed worst. We built a system that feels like learning while quietly undermining it.</p>
+      <p class="reveal">I also don't know if what I built is the answer. The platform works for the students I've measured. I haven't measured it on enough students, in enough contexts, for long enough to be certain. What I'm certain about is the question: how do you keep the struggle productive without making it insurmountable?</p>
+      <div class="pull reveal" style="color:var(--ink);border-color:var(--warm)">"The goal is not to replace the struggle. The goal is to make the struggle survivable — to keep the learner in the room long enough for the real work to happen."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ACT V -->
+<section id="act5" data-nav="act5">
+  <div class="scene">
+    <div class="scene-inner">
+      <div class="act-label">Act V · The Hybrid Future — The Data</div>
+      <h2 class="act-title reveal">The hybrid group<br>started lowest.<br><em>Finished highest.</em></h2>
+      <p class="reveal">39 students. Three groups, controlled. Same syllabus, same time, different methods. Two months. Same practice test before and after.</p>
+      <div class="method-row reveal">
+        <div class="method-card ai">
+          <div class="m-label">AI-Only · n=13</div>
+          <div class="m-score" style="color:var(--cool)">210</div>
+          <div class="m-gain" style="color:var(--cool)">+10 pts from baseline 200</div>
+          <p class="m-desc">Fastest initial gains. Highest confidence. Students who bypassed the hint system were weakest at the end despite feeling most prepared.</p>
+        </div>
+        <div class="method-card trad">
+          <div class="m-label">Traditional · n=13</div>
+          <div class="m-score" style="color:var(--gold)">208</div>
+          <div class="m-gain" style="color:var(--gold)">+11 pts from baseline 197</div>
+          <p class="m-desc">Marginally stronger gain rate. Active recall builds more durable memory. Slower acquisition, deeper retention.</p>
+        </div>
+        <div class="method-card hybrid">
+          <div class="m-label">Hybrid · n=13</div>
+          <div class="m-score" style="color:#2d9a48">218</div>
+          <div class="m-gain" style="color:#2d9a48">+23 pts from baseline 195</div>
+          <p class="m-desc">Started lowest. Finished 8 points ahead. In JEE Mains, 8 points is the difference between institutions. They didn't add — they compounded.</p>
+        </div>
+      </div>
+      <div class="data-panel reveal">
+        <div class="data-panel-head"><span class="data-panel-title">Final score · JEE Mains practice · out of 300</span><span style="font-family:var(--mono);font-size:.56rem;color:rgba(245,237,224,.18)">n=39</span></div>
+        <div class="data-panel-body">
+          <div class="race-row"><div class="race-lbl">AI-Only</div><div class="race-outer"><div class="race-bar" id="r-ai" style="width:0%;background:rgba(42,107,138,.55)">210</div></div><div class="race-delta" style="color:var(--cool)">+10</div></div>
+          <div class="race-row"><div class="race-lbl">Traditional</div><div class="race-outer"><div class="race-bar" id="r-trad" style="width:0%;background:rgba(184,130,26,.55)">208</div></div><div class="race-delta" style="color:var(--gold)">+11</div></div>
+          <div class="race-row"><div class="race-lbl">Hybrid</div><div class="race-outer"><div class="race-bar" id="r-hybrid" style="width:0%;background:rgba(45,154,72,.65)">218</div></div><div class="race-delta" style="color:#2d9a48">+23</div></div>
+        </div>
+      </div>
+      <h3 class="act-sub reveal">Why it compounds</h3>
+      <p class="reveal">Three features, three phases of memory consolidation. The struggle timer preserves encoding difficulty. The Socratic hint system activates elaborative interrogation — asking "what direction should you be thinking?" forces connection to prior knowledge, the decisive variable VanLehn (2011) identified in AI tutors that actually work. The mistake log closes the loop: returning to past errors is reconstruction, not review (Roediger & Karpicke, 2006). Hybrid students triggered all three in sequence. The 2× gain wasn't AI + traditional. It was encoding × retrieval × reconstruction. Compounding.</p>
+      <h3 class="act-sub reveal">Pre/post — workshop data</h3>
+      <p class="reveal">20% could explain algorithmic logic before each session. 80% could apply it unprompted after one — spontaneously connecting Google Search, Netflix, WhatsApp to what they'd just learned.</p>
+      <div class="gain-vis reveal" id="gain-chart"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.75rem 0" class="reveal">
+        <div style="border-top:1px solid rgba(245,237,224,.07);padding-top:.9rem"><div style="font-family:var(--serif);font-size:2.6rem;font-weight:300;color:var(--paper)">75%</div><div style="font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(245,237,224,.28);margin-top:.25rem">longer sessions · adaptive difficulty game</div></div>
+        <div style="border-top:1px solid rgba(245,237,224,.07);padding-top:.9rem"><div style="font-family:var(--serif);font-size:2.6rem;font-weight:300;color:var(--paper)">50%</div><div style="font-family:var(--mono);font-size:.56rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(245,237,224,.28);margin-top:.25rem">fewer retries · same study · n=10</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACT VI -->
+<section id="act6" data-nav="act6">
+  <div class="paper-section">
+    <div class="paper-section-inner">
+      <div class="act-label">Act VI · The Work</div>
+      <h2 class="act-title reveal" style="color:var(--ink)">Not a plan.<br><em>Already built.</em><br>Check for yourself.</h2>
+      <p class="reveal">I didn't build this because I had a roadmap. I built it because after every workshop students asked: where do I keep learning? I couldn't point them anywhere that would meet them where they were. So I built the place.</p>
+      <div class="platform-features reveal">
+        <div class="feat-num">01</div>
+        <div class="feat-content"><div class="feat-title" style="color:var(--ink)">Productive Struggle Timer</div><p class="feat-body" style="color:rgba(26,15,10,.48)">Hints unlock only after a minimum independent attempt window. Bjork (1994): introducing difficulty during learning produces dramatically stronger long-term retention. The discomfort is the mechanism.</p></div>
+        <div class="feat-num">02</div>
+        <div class="feat-content"><div class="feat-title" style="color:var(--ink)">Socratic Hint System — AlgoBot</div><p class="feat-body" style="color:rgba(26,15,10,.48)">Never the answer. Always the direction. VanLehn (2011): AI tutors that diagnose misconceptions and provide targeted hints outperform both no-feedback and direct-answer systems.</p></div>
+        <div class="feat-num">03</div>
+        <div class="feat-content"><div class="feat-title" style="color:var(--ink)">Mistake Log</div><p class="feat-body" style="color:rgba(26,15,10,.48)">Every error logged with root cause and correction path. Dunlosky et al. (2013): students who regularly review errors consistently outperform those who only practise new material.</p></div>
+        <div class="feat-num">04</div>
+        <div class="feat-content"><div class="feat-title" style="color:var(--ink)">Adaptive Difficulty Routing</div><p class="feat-body" style="color:rgba(26,15,10,.48)">Tracks accuracy, retry count, and hint usage to route students toward problems at the right challenge level. Confirmed: 75% longer sessions, 50% fewer retries.</p></div>
+      </div>
+      <div class="stat-row reveal" style="background:var(--paper)">
+        <div class="stat-c"><div class="stat-big" style="color:var(--ink)">100+</div><div class="stat-note" style="color:rgba(26,15,10,.28)">Students through workshops</div></div>
+        <div class="stat-c"><div class="stat-big" style="color:var(--ink)">5</div><div class="stat-note" style="color:rgba(26,15,10,.28)">NGO partners</div></div>
+        <div class="stat-c"><div class="stat-big" style="color:var(--ink)">40k+</div><div class="stat-note" style="color:rgba(26,15,10,.28)">Blog readers · 10+ countries</div></div>
+        <div class="stat-c"><div class="stat-big" style="color:var(--ink)">2×</div><div class="stat-note" style="color:rgba(26,15,10,.28)">Hybrid vs. either method alone</div></div>
+      </div>
+      <p class="reveal" style="margin-top:1.75rem">The platform is free. Research published with permanent DOIs on arXiv and OSF. Methodology reviewed by an Oxford-affiliated education researcher. None of this is description. Check for yourself.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CLOSING -->
+<section id="closing" data-nav="closing">
+  <div id="closing">
+    <canvas id="closing-canvas"></canvas>
+    <div class="closing-inner">
+      <div class="act-label" style="color:rgba(245,237,224,.25)">Closing</div>
+      <div class="closing-question reveal">"Where do I keep<br><em>learning?"</em></div>
+      <p class="reveal" style="color:rgba(245,237,224,.58);max-width:560px">That's the question a student asked me after the first AlgoBridge workshop. She wasn't asking about the next topic. She was asking whether there was a place — anywhere — built for someone who started from where she was. I didn't have an answer. That gap, more than any statistic in this essay, is why everything after it got built.</p>
+      <p class="reveal" style="color:rgba(245,237,224,.42);max-width:560px;font-style:italic">Before this: I understood the problem abstractly. I knew the access gap was real. But I hadn't felt its specific shape until I was standing in front of students who wanted to continue and had nowhere to go. That moment was the before. Everything in this essay is the after.</p>
+      <p class="reveal" style="color:rgba(245,237,224,.42);max-width:560px">The gap is not inevitable. It is a design choice — made every time a learning system is built for the student who already knows a little. I set out to answer one question. The answer kept requiring more work. I kept doing it.</p>
+      <p class="reveal" style="color:rgba(245,237,224,.26);max-width:560px;font-family:var(--mono);font-size:.82rem;letter-spacing:.02em">The threshold is still there. For most students, it's still too far. That's still the problem.</p>
+      <div class="links-row reveal">
+        <a href="https://ak3036811-gif.github.io/algobridge-learn/" class="ext-link primary" target="_blank">Try the platform →</a>
+        <a href="https://osf.io/8f4c3" class="ext-link" target="_blank">Read the study →</a>
+        <a href="https://ak3036811-gif.github.io/Main-Website/" class="ext-link" target="_blank">Full portfolio →</a>
+        <a href="https://itsreadingtimee.blogspot.com" class="ext-link" target="_blank">Blog →</a>
+      </div>
+      <div style="margin-top:3.5rem;padding-top:1.75rem;border-top:1px solid rgba(245,237,224,.05)">
+        <p style="font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,237,224,.18);margin-bottom:.4rem">Data sources</p>
+        <p style="font-family:var(--mono);font-size:.6rem;color:rgba(245,237,224,.15);line-height:1.85;margin:0">AlgoBridge Workshop Data 2024–25 · AI vs. Traditional Learning, 2025 — OSF: osf.io/8f4c3 · AI-Adaptive Difficulty in Games — OSF: osf.io/54dws · Student vignettes are composite portraits.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <footer>
-  <p style="margin-bottom:0.5rem;color:rgba(245,240,232,0.65)">The Learning Gap — An Interactive Visual Essay</p>
-  <p style="margin-bottom:1rem">By <span style="color:rgba(245,240,232,0.65)">Ayush Kumar</span> · Founder, <a href="https://ak3036811-gif.github.io/algobridge-learn/" style="color:#e8a87c;text-decoration:none">AlgoBridge</a></p>
-  <p style="font-size:0.65rem;opacity:0.55">Built with p5.js, vanilla JS, and an insistence that data should be felt, not just read.</p>
+  <p style="margin-bottom:.25rem;color:rgba(245,237,224,.3)">The Learning Gap — An Interactive Visual Essay</p>
+  <p>By Ayush Kumar · Founder, <a href="https://ak3036811-gif.github.io/algobridge-learn/">AlgoBridge</a> · Built with p5.js and the insistence that data should be felt, not just read.</p>
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js"></script>
 <script>
-// ═══════════════════════════════════════════════
-// CHAPTER NAV
-// ═══════════════════════════════════════════════
-const navDots = document.querySelectorAll('.nav-dot');
-const navSections = ['hero','ch1','vignettes','ch2','ch3','ch4','ch5','ch6','ch7','closing'];
-const darkNavSections = ['hero','ch3','closing'];
+// PROGRESS
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progress').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';},{passive:true});
 
-function updateNav() {
-  let current = 'hero';
-  navSections.forEach(id => {
-    const el = document.getElementById(id);
-    if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.5) current = id;
-  });
-  navDots.forEach(dot => {
-    const sec = dot.dataset.section;
-    dot.classList.remove('active','light');
-    if (darkNavSections.includes(current)) dot.classList.add('light');
-    if (sec === current) dot.classList.add('active');
-  });
-}
-window.addEventListener('scroll', updateNav, { passive: true });
-navDots.forEach(dot => {
-  dot.addEventListener('click', () => {
-    const el = document.getElementById(dot.dataset.section);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  });
-});
+// NAV DOTS
+const dots=document.querySelectorAll('.cdot');
+const sids=['opening','act1','act2','act3','act4','act5','act6','closing'];
+window.addEventListener('scroll',()=>{
+  let cur='opening';
+  sids.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<=window.innerHeight*.45)cur=id;});
+  dots.forEach(d=>d.classList.toggle('active',d.dataset.s===cur));
+},{passive:true});
+dots.forEach(d=>d.addEventListener('click',()=>{const el=document.getElementById(d.dataset.s);if(el)el.scrollIntoView({behavior:'smooth'});}));
 
-// ═══════════════════════════════════════════════
-// READING PROGRESS BAR
-// ═══════════════════════════════════════════════
-function updateProgress() {
-  const h = document.documentElement;
-  const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-  document.getElementById('reading-progress').style.width = pct + '%';
-}
-window.addEventListener('scroll', updateProgress, { passive: true });
+// SCROLL REVEAL
+const revObs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    e.target.classList.add('in');
+    if(e.target.classList.contains('fail-grid'))
+      e.target.querySelectorAll('.fail-bar').forEach((b,i)=>setTimeout(()=>b.style.width=b.dataset.w,200+i*150));
+    if(e.target.id==='gain-chart')animateGain();
+  });
+},{threshold:.1,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
-// ═══════════════════════════════════════════════
-// HERO CANVAS
-// ═══════════════════════════════════════════════
-const heroSketch = function(p) {
-  let dots = [];
-  const N = 180;
-  p.setup = function() {
-    const c = document.getElementById('hero-canvas');
-    const r = c.parentElement.getBoundingClientRect();
-    p.createCanvas(r.width, r.height, p.P2D).parent(c.parentElement).id('hero-canvas');
-    for (let i = 0; i < N; i++) {
-      dots.push({ x: p.random(p.width), y: p.random(p.height), vx: p.random(-0.3, 0.3), vy: p.random(-0.3, 0.3), r: p.random(1.5, 4), bright: p.random(0.3, 0.85), side: i < N * 0.55 ? 'left' : 'right' });
-    }
-    document.getElementById('hero-canvas').style.position = 'absolute';
+// RACE BARS
+let raceAnimated=false;
+new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting&&!raceAnimated){raceAnimated=true;setTimeout(()=>document.getElementById('r-ai').style.width='70%',100);setTimeout(()=>document.getElementById('r-trad').style.width='69.3%',300);setTimeout(()=>document.getElementById('r-hybrid').style.width='72.7%',500);}});},{threshold:.3}).observe(document.getElementById('r-ai').closest('.data-panel'));
+
+// GAIN CHART
+const gainData=[{label:'Session 1',before:18,after:79},{label:'Session 2',before:22,after:81},{label:'Session 3',before:17,after:78},{label:'Session 4',before:21,after:83},{label:'Session 5',before:20,after:80}];
+const gc=document.getElementById('gain-chart');
+gainData.forEach(d=>{const row=document.createElement('div');row.className='gain-row';row.innerHTML='<div class="gain-lbl">'+d.label+'</div><div class="gain-track"><div class="gain-before" style="width:'+d.before+'%">'+d.before+'%</div><div class="gain-after" style="width:0%">'+d.after+'%</div></div>';gc.appendChild(row);});
+let gainDone=false;
+function animateGain(){if(gainDone)return;gainDone=true;requestAnimationFrame(()=>{document.querySelectorAll('.gain-after').forEach((el,i)=>setTimeout(()=>el.style.width=gainData[i].after+'%',i*80+300));});}
+
+// OPENING p5
+new p5(function(p){
+  let dots=[];const N=100;
+  p.setup=function(){
+    const sec=document.getElementById('opening');
+    const cnv=p.createCanvas(sec.clientWidth,sec.clientHeight);
+    cnv.style('position','absolute');cnv.style('top','0');cnv.style('left','0');cnv.style('z-index','1');cnv.style('pointer-events','none');cnv.parent(sec);
+    for(let i=0;i<N;i++){const a=i<N*.5;dots.push({x:p.random(p.width),y:p.random(p.height),vx:(a?.14:-.14)+p.random(-.08,.08),vy:p.random(-.12,.12),r:p.random(.8,2.8),bright:p.random(.15,.65),side:a});}
   };
-  p.draw = function() {
-    p.clear(); p.background(14, 14, 14, 0);
-    for (let i = 0; i < dots.length; i++) {
-      for (let j = i + 1; j < dots.length; j++) {
-        const d = p.dist(dots[i].x, dots[i].y, dots[j].x, dots[j].y);
-        if (d < 90) {
-          const alpha = p.map(d, 0, 90, 30, 0);
-          const sameGroup = dots[i].side === dots[j].side;
-          if (sameGroup) { p.stroke(dots[i].side === 'left' ? 26 : 196, dots[i].side === 'left' ? 107 : 57, dots[i].side === 'left' ? 138 : 45, alpha); }
-          else { p.stroke(150, 100, 60, alpha * 0.3); }
-          p.strokeWeight(0.5); p.line(dots[i].x, dots[i].y, dots[j].x, dots[j].y);
-        }
-      }
+  p.draw=function(){
+    p.clear();
+    for(let i=0;i<dots.length;i++)for(let j=i+1;j<dots.length;j++){
+      const d=p.dist(dots[i].x,dots[i].y,dots[j].x,dots[j].y);
+      if(d<75&&dots[i].side===dots[j].side){p.stroke(dots[i].side?42:201,dots[i].side?107:74,dots[i].side?138:43,p.map(d,0,75,10,0));p.strokeWeight(.4);p.line(dots[i].x,dots[i].y,dots[j].x,dots[j].y);}
     }
     p.noStroke();
-    dots.forEach(d => {
-      const col = d.side === 'left' ? p.color(26, 107, 138, d.bright * 255) : p.color(196, 57, 45, d.bright * 255);
-      p.fill(col); p.circle(d.x, d.y, d.r * 2);
-      d.x += d.vx; d.y += d.vy;
-      if (d.x < 0 || d.x > p.width) d.vx *= -1;
-      if (d.y < 0 || d.y > p.height) d.vy *= -1;
-    });
+    dots.forEach(d=>{p.fill(d.side?p.color(42,107,138,d.bright*145):p.color(201,74,43,d.bright*128));p.circle(d.x,d.y,d.r*2);d.x+=d.vx;d.y+=d.vy;if(d.x<-20)d.x=p.width+20;if(d.x>p.width+20)d.x=-20;if(d.y<0||d.y>p.height)d.vy*=-1;});
   };
-  p.windowResized = function() { const r = document.getElementById('hero').getBoundingClientRect(); p.resizeCanvas(r.width, r.height); };
-};
-new p5(heroSketch);
-
-// ═══════════════════════════════════════════════
-// SCROLL REVEAL
-// ═══════════════════════════════════════════════
-const revealObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visible');
-      if (e.target.id === 'gain-chart') animateGain();
-    }
-  });
-}, { threshold: 0.15, rootMargin: '0px 0px -60px 0px' });
-document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-// ═══════════════════════════════════════════════
-// GAIN CHART — workshop pre/post data
-// ═══════════════════════════════════════════════
-const gainData = [
-  { label: 'Session 1', before: 18, after: 79 },
-  { label: 'Session 2', before: 22, after: 81 },
-  { label: 'Session 3', before: 17, after: 78 },
-  { label: 'Session 4', before: 21, after: 83 },
-  { label: 'Session 5', before: 20, after: 80 },
-];
-const gainChart = document.getElementById('gain-chart');
-gainData.forEach(d => {
-  const row = document.createElement('div');
-  row.className = 'gain-row';
-  row.innerHTML = `<div class="gain-label">${d.label}</div><div class="gain-track"><div class="gain-before" style="width:${d.before}%">${d.before}%</div><div class="gain-after" style="width:0%;z-index:2">${d.after}%</div></div>`;
-  gainChart.appendChild(row);
+  p.windowResized=function(){const sec=document.getElementById('opening');p.resizeCanvas(sec.clientWidth,sec.clientHeight);};
 });
-let gainAnimated = false;
-function animateGain() {
-  if (gainAnimated) return; gainAnimated = true;
-  requestAnimationFrame(() => {
-    document.querySelectorAll('.gain-after').forEach((el, i) => {
-      const val = gainData[i].after;
-      setTimeout(() => { el.style.width = val + '%'; }, i * 60 + 300);
-    });
-  });
-}
 
-// ═══════════════════════════════════════════════
-// RACE BAR ANIMATION
-// ═══════════════════════════════════════════════
-let raceAnimated = false;
-const raceObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting && !raceAnimated) {
-      raceAnimated = true;
-      setTimeout(() => { document.getElementById('race-ai').style.width = '70%'; }, 100);
-      setTimeout(() => { document.getElementById('race-trad').style.width = '69.3%'; }, 300);
-      setTimeout(() => { document.getElementById('race-hybrid').style.width = '72.7%'; }, 500);
-    }
-  });
-}, { threshold: 0.3 });
-const raceEl = document.getElementById('race-ai');
-if (raceEl) { const rt = raceEl.closest('.race-track'); if (rt) raceObs.observe(rt); }
+// ECOSYSTEM p5
+new p5(function(p){
+  let particles=[];
+  const NUM=240,BG=.0018,BD=.0008,TH=.55;
+  let ai=.5,acc=.3,sc=.4;
+  const GL=300;let gh=new Array(GL).fill(null),gi=0;
+  const rA=document.getElementById('r-above'),rB=document.getElementById('r-below'),rG=document.getElementById('r-gap'),rR=document.getElementById('r-rate');
+  const ins=document.getElementById('insight-text'),tl=document.getElementById('gap-trend-label');
+  const gc2=document.getElementById('gap-history-canvas'),gx=gc2.getContext('2d');
+  let fc=0,lastMsg='',iTO=null;
 
-// ═══════════════════════════════════════════════
-// PARTICLE CANVAS
-// ═══════════════════════════════════════════════
-const particleSketch = function(p) {
-  let particles = []; const NUM = 200; let mx = -500, my = -500;
-  p.setup = function() {
-    const container = document.getElementById('particle-canvas').parentElement;
-    p.createCanvas(container.clientWidth, 320, p.P2D).parent(container).id('particle-canvas');
-    for (let i = 0; i < NUM; i++) {
-      const hasAccess = i < NUM * 0.45;
-      particles.push({ x: p.random(p.width), y: p.random(p.height), vx: (hasAccess ? 1 : -1) * p.random(0.2, 0.8), vy: p.random(-0.4, 0.4), acc: hasAccess, energy: hasAccess ? p.random(0.6, 1.0) : p.random(0.1, 0.5), trail: [] });
-    }
-    document.getElementById('particle-canvas').style.display = 'block';
+  const INS={
+    crisis:["At this level of access, the gap compounds faster than any intervention can close it.","Below 15% prior access: the system is self-reinforcing.","This is the current global default. Most classrooms look exactly like this."],
+    warning:["Counter-intuitive: AI Availability is high — most people expect the gap to close. Watch what actually happens when scaffolding is low.","High AI without scaffolding amplifies those who already could ask good questions.","High AI, low scaffolding — the default deployment model for most EdTech platforms right now."],
+    progress:["Scaffolding quality is doing more work than AI availability here. That's what the research found too.","The gap is closing. Unsupported students need the bridge before they give up.","This is what AlgoBridge was built for."],
+    optimal:["High AI + high scaffolding + prior access: the 2× result.","When all three align, particles cluster. Peer learning emerges.","This is the world this work is trying to build. Every slider here is a real design decision."],
+    balanced:["Prior access is the variable with the highest leverage. More than AI availability alone.","The gap here is the gap between two students asking the same question.","Move prior access to 5%. Watch the simulation. This is what structural inequality looks like in motion."],
   };
-  p.draw = function() {
-    p.background(14, 14, 14, 30);
-    const bridgeDist = 120;
-    particles.forEach(pt => {
-      const d = p.dist(pt.x, pt.y, mx, my);
-      if (d < bridgeDist) {
-        const influence = p.map(d, 0, bridgeDist, 1, 0);
-        pt.energy = Math.min(1, pt.energy + influence * 0.05);
-        pt.acc = pt.energy > 0.55;
-        const angle = p.atan2(pt.y - my, pt.x - mx);
-        pt.vx += Math.cos(angle) * 0.08 * influence;
-        pt.vy += Math.sin(angle) * 0.08 * influence;
-      } else { if (!pt.acc) pt.energy = Math.max(0.1, pt.energy - 0.003); }
-      pt.vx += (pt.acc ? 0.01 : -0.005) + p.random(-0.02, 0.02);
-      pt.vy += p.random(-0.02, 0.02);
-      pt.vx = p.constrain(pt.vx, -2, 2); pt.vy = p.constrain(pt.vy, -1.5, 1.5);
-      pt.x += pt.vx; pt.y += pt.vy;
-      if (pt.x < 0) pt.x = p.width; if (pt.x > p.width) pt.x = 0;
-      if (pt.y < 0) pt.y = p.height; if (pt.y > p.height) pt.y = 0;
-      const alpha = pt.energy * 200;
-      if (pt.acc) { p.fill(26, 107, 138, alpha); } else { p.fill(196, 57, 45, alpha); }
-      p.noStroke(); p.circle(pt.x, pt.y, 3 + pt.energy * 4);
+
+  function getState(a,b){const pct=a/(a+b||1);if(acc<.15&&pct<.35)return'crisis';if(ai>.7&&sc<.25)return'warning';if(ai>.65&&sc>.6&&acc>.55)return'optimal';if(sc>.5&&pct>.5)return'progress';return'balanced';}
+
+  function showInsight(state){
+    const msgs=INS[state],msg=msgs[Math.floor(fc/400)%msgs.length];
+    if(msg===lastMsg)return;lastMsg=msg;
+    ins.classList.remove('active','s-crisis','s-warning','s-progress','s-optimal');
+    setTimeout(()=>{ins.textContent=msg;ins.classList.add('active','s-'+state);},350);
+  }
+
+  function resizeGC(){gc2.width=gc2.offsetWidth*devicePixelRatio;gc2.height=gc2.offsetHeight*devicePixelRatio;gx.scale(devicePixelRatio,devicePixelRatio);}
+  resizeGC();
+
+  function drawGH(){
+    const W=gc2.offsetWidth,H=gc2.offsetHeight;gx.clearRect(0,0,W,H);
+    const v=gh.filter(x=>x!==null);if(v.length<2)return;
+    const mx=Math.max(...v,1),st=W/(GL-1);
+    gx.beginPath();let f=true;
+    for(let i=0;i<GL;i++){const idx=(gi+i)%GL;if(gh[idx]===null)continue;const x=i*st,y=H-(gh[idx]/mx)*(H-4)-2;f?(gx.moveTo(x,y),f=false):gx.lineTo(x,y);}
+    gx.lineTo(W,H);gx.lineTo(0,H);gx.closePath();
+    const gr=gx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'rgba(201,74,43,.28)');gr.addColorStop(1,'rgba(201,74,43,.02)');gx.fillStyle=gr;gx.fill();
+    gx.beginPath();f=true;
+    for(let i=0;i<GL;i++){const idx=(gi+i)%GL;if(gh[idx]===null)continue;const x=i*st,y=H-(gh[idx]/mx)*(H-4)-2;f?(gx.moveTo(x,y),f=false):gx.lineTo(x,y);}
+    gx.strokeStyle='rgba(201,74,43,.55)';gx.lineWidth=1.4;gx.stroke();
+    if(v.length>20){const r=v.slice(-20).reduce((a,b)=>a+b,0)/20,o=v.slice(-60,-40).reduce((a,b)=>a+b,0)/20||r;const tr=r<o*.97?'↓ narrowing':r>o*1.03?'↑ widening':'→ stable',col=r<o*.97?'rgba(55,170,80,.55)':r>o*1.03?'rgba(201,74,43,.55)':'rgba(184,130,26,.55)';if(tl){tl.textContent=tr;tl.style.color=col;}}
+  }
+
+  function initPts(){particles=[];for(let i=0;i<NUM;i++){const a=i<NUM*acc;particles.push({x:p.random(p.width),y:p.random(p.height),vx:(a?1:-1)*p.random(.12,.55),vy:p.random(-.28,.28),energy:a?p.random(.15,.28):p.random(.05,.18),isA:a});}}
+
+  p.setup=function(){
+    const w=document.getElementById('ecosystem-canvas-wrap');
+    // Remove placeholder canvas if it exists
+    const ph=document.getElementById('ecosystem-canvas');
+    if(ph)ph.remove();
+    const cnv=p.createCanvas(w.clientWidth,400);
+    cnv.parent(w);
+    cnv.elt.id='ecosystem-canvas';
+    cnv.elt.style.display='block';
+    cnv.elt.style.width='100%';
+    cnv.elt.style.cursor='crosshair';
+    initPts();
+    setTimeout(()=>showInsight('balanced'),1500);
+  };
+
+  p.draw=function(){
+    p.background(20,10,6,32);fc++;
+    const gr2=BG*(1+ai*1.5)*(1+sc*1.2),dr=BD*(1-ai*.6)*(1-sc*.4);
+    let ab=0,bl=0;
+    particles.forEach(pt=>{
+      pt.isA?pt.energy=Math.min(1,pt.energy+gr2):(pt.energy=Math.max(.03,pt.energy-dr+(ai>.6?gr2*.3:0)));
+      const on=pt.energy>TH;if(on)ab++;else bl++;
+      pt.vx+=(on?.009:-.005)+p.random(-.012,.012);pt.vy+=p.random(-.012,.012);
+      pt.vx=p.constrain(pt.vx,-1.9,1.9);pt.vy=p.constrain(pt.vy,-1.3,1.3);
+      pt.x+=pt.vx;pt.y+=pt.vy;
+      if(pt.x<0)pt.x=p.width;if(pt.x>p.width)pt.x=0;if(pt.y<0)pt.y=p.height;if(pt.y>p.height)pt.y=0;
     });
-    if (mx > 0 && mx < p.width && my > 0 && my < p.height) {
-      p.noFill(); p.stroke(200, 180, 140, 40); p.strokeWeight(1); p.circle(mx, my, bridgeDist * 2);
-      p.stroke(200, 180, 140, 20); p.circle(mx, my, bridgeDist * 2.5);
-      p.fill(200, 180, 140, 25); p.noStroke(); p.circle(mx, my, 8);
+    for(let i=0;i<particles.length;i+=4)for(let j=i+4;j<particles.length;j+=4){
+      const ai2=particles[i].energy>TH,aj2=particles[j].energy>TH;if(ai2!==aj2)continue;
+      const d=p.dist(particles[i].x,particles[i].y,particles[j].x,particles[j].y);
+      if(d<52){p.stroke(ai2?42:201,ai2?107:74,ai2?138:43,p.map(d,0,52,ai2?16:10,0));p.strokeWeight(.5);p.line(particles[i].x,particles[i].y,particles[j].x,particles[j].y);}
     }
+    p.noStroke();
+    particles.forEach(pt=>{
+      const on=pt.energy>TH,near=Math.abs(pt.energy-TH)<.1;
+      if(near){p.fill(on?42:201,on?107:74,on?138:43,(52+pt.energy*175)*.18);p.circle(pt.x,pt.y,(1.4+pt.energy*4.8)*2.6);}
+      p.fill(on?42:201,on?107:74,on?138:43,52+pt.energy*175);p.circle(pt.x,pt.y,1.4+pt.energy*4.8);
+    });
+    if(fc%12===0){
+      rA.textContent=ab;rB.textContent=bl;const gap=Math.abs(ab-bl);rG.textContent=gap;rR.textContent='+'+(gr2*1000).toFixed(1);
+      gh[gi]=gap;gi=(gi+1)%GL;drawGH();
+      if(fc%300===0)showInsight(getState(ab,bl));
+    }
+    p.fill(42,107,138,140);p.noStroke();p.circle(18,18,6);p.fill(245,237,224,62);p.textSize(8.5);p.textFont('IBM Plex Mono,monospace');p.text('above threshold',27,22);
+    p.fill(201,74,43,140);p.noStroke();p.circle(18,34,6);p.fill(245,237,224,62);p.text('below threshold',27,38);
   };
-  p.mouseMoved = function() { mx = p.mouseX; my = p.mouseY; };
-  p.mouseLeft = function() { mx = -500; my = -500; };
-  p.touchMoved = function(e) {
-    e.preventDefault();
-    const rect = document.getElementById('particle-canvas').getBoundingClientRect();
-    mx = e.touches[0].clientX - rect.left; my = e.touches[0].clientY - rect.top; return false;
+
+  document.getElementById('ai-ctrl').addEventListener('input',function(){ai=this.value/100;document.getElementById('ai-val').textContent=this.value+'%';clearTimeout(iTO);iTO=setTimeout(()=>{const a=particles.filter(pt=>pt.energy>TH).length;showInsight(getState(a,NUM-a));},600);});
+  document.getElementById('access-ctrl').addEventListener('input',function(){acc=this.value/100;document.getElementById('access-val').textContent=this.value+'%';initPts();clearTimeout(iTO);iTO=setTimeout(()=>showInsight(getState(0,NUM)),600);});
+  document.getElementById('scaffold-ctrl').addEventListener('input',function(){sc=this.value/100;document.getElementById('scaffold-val').textContent=this.value+'%';clearTimeout(iTO);iTO=setTimeout(()=>{const a=particles.filter(pt=>pt.energy>TH).length;showInsight(getState(a,NUM-a));},600);});
+  p.windowResized=function(){p.resizeCanvas(document.getElementById('ecosystem-canvas-wrap').clientWidth,400);resizeGC();};
+});
+
+// CLOSING p5
+new p5(function(p){
+  let pts=[];const N=70;
+  p.setup=function(){
+    const w=document.getElementById('closing');
+    const cnv=p.createCanvas(w.clientWidth,w.clientHeight);
+    cnv.style('position','absolute');cnv.style('top','0');cnv.style('left','0');cnv.style('z-index','1');cnv.style('pointer-events','none');cnv.style('opacity','.32');cnv.parent(w);
+    const ph=document.getElementById('closing-canvas');if(ph&&ph!==cnv.elt)ph.remove();cnv.elt.id='closing-canvas';
+    for(let i=0;i<N;i++)pts.push({x:p.random(p.width),y:p.random(p.height),vx:p.random(-.28,.28),vy:p.random(-.18,.18),e:p.random(.28,.85)});
   };
-  p.touchEnded = function() { mx = -500; my = -500; };
-  p.windowResized = function() { const container = document.getElementById('particle-canvas').parentElement; p.resizeCanvas(container.clientWidth, 320); };
-};
-new p5(particleSketch);
+  p.draw=function(){
+    p.clear();const cx=p.width/2,cy=p.height/2;
+    pts.forEach(pt=>{pt.vx+=(cx-pt.x)*.0007;pt.vy+=(cy-pt.y)*.0007;pt.vx+=p.random(-.025,.025);pt.vy+=p.random(-.025,.025);pt.vx=p.constrain(pt.vx,-1.3,1.3);pt.vy=p.constrain(pt.vy,-1.3,1.3);pt.x+=pt.vx;pt.y+=pt.vy;p.fill(245,237,224,pt.e*52);p.noStroke();p.circle(pt.x,pt.y,1.8+pt.e*2.8);});
+  };
+  p.windowResized=function(){const w=document.getElementById('closing');p.resizeCanvas(w.clientWidth,w.clientHeight);};
+});
+
+// SOUND
+let aC=null,gN=null,sOn=false;
+document.getElementById('sound-btn').addEventListener('click',function(){
+  if(!aC){aC=new(window.AudioContext||window.webkitAudioContext)();gN=aC.createGain();gN.gain.value=0;gN.connect(aC.destination);
+    [[55,.014],[82.5,.009],[110,.007]].forEach(([f,v])=>{const o=aC.createOscillator(),g=aC.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(gN);o.start();});
+    const bs=aC.sampleRate*2,buf=aC.createBuffer(1,bs,aC.sampleRate),dat=buf.getChannelData(0);let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for(let i=0;i<bs;i++){const w=Math.random()*2-1;b0=.99886*b0+w*.0555179;b1=.99332*b1+w*.0750759;b2=.969*b2+w*.153852;b3=.8665*b3+w*.3104856;b4=.55*b4+w*.5329522;b5=-.7616*b5-w*.016898;dat[i]=(b0+b1+b2+b3+b4+b5+b6+w*.5362)*.004;b6=w*.115926;}
+    const s=aC.createBufferSource();s.buffer=buf;s.loop=true;s.connect(gN);s.start();
+  }
+  sOn=!sOn;gN.gain.setTargetAtTime(sOn?1:0,aC.currentTime,.5);this.textContent=sOn?'● sound':'◯ sound';this.classList.toggle('on',sOn);
+});
 </script>
 </body>
 </html>
