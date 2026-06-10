@@ -226,13 +226,13 @@ p:last-child{margin-bottom:0}
 .feat-content{margin-bottom:1.25rem}
 .feat-title{font-family:var(--serif);font-size:1.05rem;font-weight:600;margin-bottom:.35rem;color:var(--paper)}
 .feat-body{font-size:.875rem;color:rgba(245,237,224,.48);line-height:1.68;margin:0}
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin:2.5rem 0}
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1.25rem;margin:2.5rem 0}
 .stat-c{border-top:1px solid rgba(245,237,224,.08);padding-top:.9rem}
 .stat-big{font-family:var(--serif);font-size:2.6rem;font-weight:300;line-height:1;margin-bottom:.25rem;color:var(--paper)}
 .stat-note{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(245,237,224,.28)}
 
 /* CLOSING */
-#closing{background:var(--ink2);padding:9rem 0 8rem;position:relative;overflow:hidden}
+#closing-inner{background:var(--ink2);padding:9rem 0 8rem;position:relative;overflow:hidden}
 #closing-canvas{position:absolute;inset:0;opacity:.35;pointer-events:none;z-index:1}
 .closing-inner{max-width:720px;margin:0 auto;padding:0 2.5rem;position:relative;z-index:2}
 .closing-question{font-family:var(--serif);font-size:clamp(2rem,4vw,3.4rem);font-weight:300;line-height:1.18;color:var(--paper);margin-bottom:5rem;padding-bottom:2rem}
@@ -361,7 +361,7 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
   <div class="cdot" data-s="methodology" data-l="Methodology"></div>
   <div class="cdot" data-s="closing" data-l="Closing"></div>
 </nav>
-<button id="sound-btn">◯ sound<span id="sound-state-dot"></span></button>
+<button id="sound-btn"><span>◯ sound</span><span id="sound-state-dot"></span></button>
 
 <!-- OPENING — title appears directly, no typewriter -->
 <section id="opening" data-nav="opening">
@@ -565,7 +565,6 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
         </div>
       </div>
       <p class="reveal">That last finding is the one that should make researchers uncomfortable. Students who bypassed the struggle window felt most prepared — and performed worst. We built a system that feels like learning while quietly undermining it.</p>
-      <p class="reveal">I also don't know if what I built is the answer. The platform works for the students I've measured. I haven't measured it on enough students, in enough contexts, for long enough to be certain. What I'm certain about is the question: how do you keep the struggle productive without making it insurmountable?</p>
       <div class="pull reveal" style="color:var(--ink);border-color:var(--warm)">"The goal is not to replace the struggle. The goal is to make the struggle survivable — to keep the learner in the room long enough for the real work to happen."</div>
     </div>
   </div>
@@ -667,7 +666,7 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
 
 <!-- METHODOLOGY -->
 <section id="methodology" data-nav="methodology">
-  <div id="methodology">
+  <div id="methodology-inner">
     <div class="scene-inner">
       <div class="act-label" style="color:var(--warm)">Appendix · Methodology & Sources</div>
       <h2 class="act-title reveal">How this was<br><em>measured.</em></h2>
@@ -740,7 +739,7 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
 
 <!-- CLOSING -->
 <section id="closing" data-nav="closing">
-  <div id="closing">
+  <div id="closing-inner">
     <canvas id="closing-canvas"></canvas>
     <div class="closing-inner">
       <div class="act-label" style="color:rgba(245,237,224,.25)">Closing</div>
@@ -753,7 +752,6 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
         <div id="sbr-text" style="font-family:var(--sans);font-size:.88rem;line-height:1.7;color:rgba(245,237,224,.62)">She came back. Different question this time — not "what is gradient descent" but "can you help me understand what I'm missing?" That's the threshold. That's what this is for.</div>
         <div id="sbr-outcome" style="font-family:var(--mono);font-size:.52rem;color:rgba(201,74,43,.4);margin-top:.8rem;transition:color 1.8s ease .9s">→ stopped. didn't try again.</div>
       </div>
-      <p class="reveal" style="color:rgba(245,237,224,.42);max-width:560px;font-style:italic">Before this: I understood the problem abstractly. I knew the access gap was real. But I hadn't felt its specific shape until I was standing in front of students who wanted to continue and had nowhere to go. That moment was the before. Everything in this essay is the after.</p>
       <p class="reveal" style="color:rgba(245,237,224,.42);max-width:560px">The gap is not inevitable. It is a design choice — made every time a learning system is built for the student who already knows a little. I set out to answer one question. The answer kept requiring more work. I kept doing it.</p>
       <p class="reveal" style="color:rgba(245,237,224,.26);max-width:560px;font-family:var(--mono);font-size:.82rem;letter-spacing:.02em">The threshold is still there. For most students, it's still too far. That's still the problem.</p>
       <div class="threshold-divider reveal" style="margin:2rem 0 1.5rem"></div>
@@ -1079,8 +1077,8 @@ new p5(function(p){
       if(fc%300===0)showInsight(getState(ab,bl));
       // Fire threshold crossing animation when gap closes sharply
       if(fc>600&&gap<18&&typeof window._fireCrossAnim==='function')window._fireCrossAnim();
-      // Student B return: when above-threshold crosses 65%, trigger return
-      if(fc>600&&ab/(ab+bl)>.65&&typeof window._triggerStudentBReturn==='function')window._triggerStudentBReturn();
+      // Student B return: threshold lowered to 0.48 so it fires at realistic default settings
+      if(fc>600&&ab/(ab+bl)>.48&&typeof window._triggerStudentBReturn==='function')window._triggerStudentBReturn();
     }
     p.fill(42,107,138,140);p.noStroke();p.circle(18,18,6);p.fill(245,237,224,62);p.textSize(8.5);p.textFont('IBM Plex Mono,monospace');p.text('above threshold',27,22);
     p.fill(201,74,43,140);p.noStroke();p.circle(18,34,6);p.fill(245,237,224,62);p.text('below threshold',27,38);
@@ -1140,9 +1138,12 @@ window.addEventListener('scroll',()=>{
   });
   if(cur!==_lastSection){
     // Only two scroll-triggered crossings: entering the simulation and entering the closing
-    const transitions={'act3':'act2','closing':'act6'};
-    if(transitions[cur]===_lastSection){
-      setTimeout(()=>window._fireCrossAnim&&window._fireCrossAnim(),400);
+    const transitions={'act3':'act2','closing':'act6','closing':'methodology'};
+    if(cur==='act3'&&(_lastSection==='act2'))setTimeout(()=>window._fireCrossAnim&&window._fireCrossAnim(),400);
+    if(cur==='closing'){
+      // Scroll fallback: ensure Student B has returned by the time reader hits closing
+      setTimeout(()=>window._triggerStudentBReturn&&window._triggerStudentBReturn(),600);
+      setTimeout(()=>window._fireCrossAnim&&window._fireCrossAnim(),1200);
     }
     _lastSection=cur;
   }
@@ -1217,6 +1218,48 @@ if(_sbReturnEl){
     });
   },{threshold:.3}).observe(_sbReturnEl);
 }
+
+// CLOSING p5 — gravity field pulling particles toward centre
+new p5(function(p){
+  let pts=[];const N=80;
+  p.setup=function(){
+    const w=document.getElementById('closing-inner');
+    const cnv=p.createCanvas(w.clientWidth,w.clientHeight||window.innerHeight);
+    cnv.style('position','absolute');cnv.style('top','0');cnv.style('left','0');
+    cnv.style('z-index','1');cnv.style('pointer-events','none');cnv.style('opacity','.28');
+    cnv.parent(w);
+    const ph=document.getElementById('closing-canvas');if(ph&&ph!==cnv.elt)ph.remove();cnv.elt.id='closing-canvas';
+    for(let i=0;i<N;i++)pts.push({
+      x:p.random(p.width),y:p.random(p.height),
+      vx:p.random(-.32,.32),vy:p.random(-.22,.22),
+      e:p.random(.28,.85),
+      col:p.random()<.42?'above':'below'
+    });
+  };
+  p.draw=function(){
+    p.clear();const cx=p.width/2,cy=p.height*.45;
+    pts.forEach(pt=>{
+      // Gentle gravity toward centre — particles slowly converging = hope
+      pt.vx+=(cx-pt.x)*.0006;pt.vy+=(cy-pt.y)*.0006;
+      pt.vx+=p.random(-.022,.022);pt.vy+=p.random(-.022,.022);
+      pt.vx=p.constrain(pt.vx,-1.2,1.2);pt.vy=p.constrain(pt.vy,-1.2,1.2);
+      pt.x+=pt.vx;pt.y+=pt.vy;
+      if(pt.col==='above')p.fill(42,107,138,pt.e*48);
+      else p.fill(245,224,200,pt.e*38);
+      p.noStroke();p.circle(pt.x,pt.y,1.6+pt.e*2.4);
+    });
+    // Draw faint connection lines between converging particles
+    p.stroke(245,237,224,6);p.strokeWeight(.4);
+    for(let i=0;i<N;i+=3){for(let j=i+3;j<N;j+=3){
+      const d=p.dist(pts[i].x,pts[i].y,pts[j].x,pts[j].y);
+      if(d<90){p.stroke(245,237,224,p.map(d,0,90,7,0));p.line(pts[i].x,pts[i].y,pts[j].x,pts[j].y);}
+    }}
+  };
+  p.windowResized=function(){
+    const w=document.getElementById('closing-inner');
+    if(w)p.resizeCanvas(w.clientWidth,w.clientHeight||window.innerHeight);
+  };
+});
 
 // ── FEATURE 1: READER SELF-PLACEMENT ──
 const RP_CONFIG = {
@@ -1359,8 +1402,10 @@ document.getElementById('sound-btn').addEventListener('click', function() {
   }
   sOn = !sOn;
   gN.gain.setTargetAtTime(sOn ? 1 : 0, aC.currentTime, .5);
-  this.innerHTML = (sOn ? '&#9679; sound' : '&#9675; sound') + '<span id="sound-state-dot" class="' + (sOn?'active':'') + '" style="width:5px;height:5px;border-radius:50%;background:var(--warm);display:inline-block;margin-left:6px;vertical-align:middle;transition:background .8s"></span>';
+  this.firstChild.textContent = sOn ? '\u25cf sound' : '\u25cb sound';
   this.classList.toggle('on', sOn);
+  const dot = document.getElementById('sound-state-dot');
+  if(dot) dot.classList.toggle('active', sOn);
 });
 </script>
 </body>
