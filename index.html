@@ -278,6 +278,15 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
 .limitation-item::before{content:'·';font-family:var(--mono);color:rgba(201,74,43,.45);flex-shrink:0}
 .limitation-item:last-child{margin-bottom:0}
 
+/* ── PROVENANCE BOX ── */
+.provenance-box{background:rgba(42,107,138,.06);border:1px solid rgba(42,107,138,.18);padding:1.4rem 1.6rem;margin:2.5rem 0}
+.provenance-header{font-family:var(--mono);font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(42,107,138,.7);margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.provenance-header::after{content:'';flex:1;height:1px;background:rgba(42,107,138,.15)}
+.provenance-lines{display:flex;flex-direction:column;gap:.55rem}
+.provenance-line{display:flex;align-items:baseline;gap:.85rem}
+.provenance-num{font-family:var(--serif);font-size:1.15rem;font-weight:300;color:var(--cool);line-height:1;flex-shrink:0;min-width:2.8rem}
+.provenance-text{font-family:var(--sans);font-size:.84rem;color:rgba(245,237,224,.48);line-height:1.5}
+
 /* ── READER PLACEMENT ── */
 #reader-placement{background:rgba(201,74,43,.04);border:1px solid rgba(201,74,43,.12);padding:2rem 2rem 1.75rem;margin:2.5rem 0}
 .rp-prompt{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--warm);margin-bottom:1.2rem}
@@ -399,6 +408,8 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
       </div>
 
 
+      <p class="reveal" style="font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;color:rgba(245,237,224,.3);border-left:2px solid rgba(42,107,138,.25);padding:.6rem 0 .6rem 1.1rem;margin:1.5rem 0">Observed across 218 students · 5 NGO partners · 2 published studies · 1 platform built from the findings</p>
+
       <p class="reveal">The AI didn't create this inequality. It <em style="color:var(--paper)">inherited</em> it — from every textbook, every gate-kept course, every resource designed for the person who already knows a little. Then it amplified it at scale.</p>
 
       <p class="reveal" style="font-style:italic;color:rgba(245,237,224,.52);border-left:2px solid rgba(201,74,43,.22);padding:.8rem 0 .8rem 1.4rem;margin:1.8rem 0">I first noticed this pattern while running workshops. Students weren't failing because they lacked curiosity — they had plenty of that. They were failing because every explanation assumed a vocabulary they hadn't been given yet. The question wasn't "how do I learn more?" It was a quieter, more defeating one: "where do I even begin?" I didn't have a good answer. That gap is why everything after it got built.</p>
@@ -416,6 +427,15 @@ footer a{color:rgba(245,237,224,.28);text-decoration:none}
         <div class="rp-result" id="rp-result">
           <div class="rp-result-text" id="rp-result-text"></div>
           <div class="rp-sim-nudge" id="rp-sim-nudge"></div>
+        </div>
+      </div>
+
+      <div class="provenance-box reveal">
+        <div class="provenance-header">Where this came from</div>
+        <div class="provenance-lines">
+          <div class="provenance-line"><span class="provenance-num">218</span><span class="provenance-text">students taught across 5 NGOs</span></div>
+          <div class="provenance-line"><span class="provenance-num">2 yrs</span><span class="provenance-text">studying AI-assisted learning in low-access classrooms</span></div>
+          <div class="provenance-line"><span class="provenance-num">1</span><span class="provenance-text">platform built to close what was found — AlgoBridge Learn</span></div>
         </div>
       </div>
 
